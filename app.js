@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 
 import index from './routes/index';
 import domain from './routes/domain';
+import user from './routes/user';
 
 import mongoose from 'mongoose';
 
@@ -20,6 +21,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use('/', index);
 app.use('/domain', domain);
+app.use('/user', user);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
