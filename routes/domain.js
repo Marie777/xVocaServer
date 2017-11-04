@@ -34,4 +34,8 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.post('/go',(req,res) =>{
+  return Domain.create({userName:'sdf'}, (err)=>{res.send(err)});
+})
+
 export default router;

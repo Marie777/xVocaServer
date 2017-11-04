@@ -10,12 +10,17 @@
     "body-parser": "~1.18.2",
     "debug": "~2.6.9",
     "express": "~4.15.5",
+    "google-auth-library": "^0.11.0",
     "mongoose": "^4.12.4",
-    "morgan": "~1.9.0"
+    "morgan": "~1.9.0",
+    "passport": "^0.4.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
+    "eslint": "^4.10.0",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-react": "^7.4.0",
     "nodemon": "^1.12.1"
   }
 }

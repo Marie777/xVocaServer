@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
-var UserSchema = mongoose.Schema({
-  index: {type: String, index: true, uniqe: true},
+const UserSchema = mongoose.Schema({
+  googleId: String,
   userName: String,
   email: String,
   age: {type: Number, min: 5, max: 100},
@@ -24,6 +24,6 @@ var UserSchema = mongoose.Schema({
 });
 
 
-var User = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', UserSchema);
 
 export default User;
