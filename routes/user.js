@@ -13,26 +13,22 @@ router.get('/allUsers',(req, res) =>{
   })
 });
 
-router.get('/:id', (req,res) =>{
+router.get('/:id', async (req,res) =>{
   const id = req.params.id;
-  if(mongoose.Types.ObjectId.isValid(id)){
-      User.findOne({_id:id}, (err, user) =>{
-        if(user) { return res.send(user);}
-        else { return res.send(err); }
-      });
-  }
+
+  let user = await User.findOne({_id:id}).lean();
+  if(user) { return res.json(user);}
+  else { return res.json(err); }
+
 });
 
-router.post('/', async (req, res) => {
-  return User.create({userName : 'MEEEEEEEEEEEE'}, (err,user)=> {
-    if(user){ return res.send(user);}
-    else { return res.send(err);}
-  });
-});
+router.get('/googleId', async (req,res) =>{
+  const googleId = req.body.googleId;
 
-router.post('/gog',(req,res) =>{
-  return User.create({userName:'new', domains:[{domainName:'domainName', categories:[{categoryName:'categoryName'}]}]},
-   (err,user)=>{return res.send(user)});
+  let user = await User.findOne({googleId}).lean();
+  if(user) { return res.json(user);}
+  else { return res.json(err); }
+
 });
 
 router.post('/tokenlogin/google', (req, res) => {
@@ -44,9 +40,10 @@ router.post('/tokenlogin/google', (req, res) => {
       res.json({error: "Auth failed"}).status(400);
     } else {
       let payload = login.getPayload();
-      let googeId = payload['sub'];
+      let googleId = payload['sub'];
 
-      let user = await User.findOne({ googeId }).lean();
+
+      let user = await User.findOne({ googleId }).lean();
 
       if(user === null) {
         user = await User.create({
@@ -57,6 +54,7 @@ router.post('/tokenlogin/google', (req, res) => {
       }
 
       res.json(user);
+
     }
   });
 });
