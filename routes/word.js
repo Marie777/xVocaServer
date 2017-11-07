@@ -4,20 +4,23 @@ import mongoose from 'mongoose';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
-  const word = req.body.word;
+router.get('/:word', async (req, res) => {
+  const word = req.params.word;
 
   let wordDetails = await WordDetails.findOne({word}).lean();
-  if(wordDetails === null) { return res.json({});}
-  else { return res.json(wordDetails); }
+  if(wordDetails === null) {
+    return res.json({});
+  } else {
+    return res.json(wordDetails);
+  }
 
 });
 
-router.post('/mockWord', (req, res) => {
+router.post('/mockWord', async (req, res) => {
 
   let sentence1 = {
       sentence: "sentence1",
-      user: "user", //reference?
+      user: "5a009c07c22ed764907cae95", //reference?
       countLike: 3,
       location: {lat: 50, lng: 30}
   }
@@ -28,10 +31,9 @@ router.post('/mockWord', (req, res) => {
       sentences: [sentence1, sentence1]
   }
 
-  WordDetails.create(mockWord, (err, w) => {
-    if(w) {return res.json(w);}
-    else {return res.json(err); }
-  });
+  const wordDetails = await WordDetails.create(mockWord);
+
+  res.json(wordDetails);
 });
 
 

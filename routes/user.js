@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import User from '../models/user';
 import mongoose from 'mongoose';
-import { google_client_id } from '../config';
-import GoogleAuth from 'google-auth-library';
 
 const router = Router();
 
@@ -72,31 +70,7 @@ router.post('/mockUser', async(req, res) => {
 
 
 router.post('/tokenlogin/google', (req, res) => {
-  const google_token = req.body.token;
-  let auth = new GoogleAuth();
-  let client = new auth.OAuth2(google_client_id, '', '');
-  client.verifyIdToken(google_token, google_client_id, async (e, login) => {
-    if(e) {
-      res.json({error: "Auth failed"}).status(400);
-    } else {
-      let payload = login.getPayload();
-      let googleId = payload['sub'];
-
-
-      let user = await User.findOne({ googleId }).lean();
-
-      if(user === null) {
-        user = await User.create({
-          googleId: payload['sub'],
-          userName: payload['name'],
-          email: payload['email'],
-        });
-      }
-
-      res.json(user);
-
-    }
-  });
+  res.json(req.user);
 });
 
 
