@@ -4,8 +4,9 @@ var logger = require('morgan');
 var bodyParser = require('body-parser');
 
 import index from './routes/index';
-import domain from './routes/domain';
 import user from './routes/user';
+import word from './routes/word';
+import file from './routes/file';
 
 import mongoose from 'mongoose';
 
@@ -16,12 +17,13 @@ mongoose.connect('mongodb://localhost/xvoca', { useMongoClient: true });
 var app = express();
 
 app.use(logger('dev'));
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use('/', index);
-app.use('/domain', domain);
 app.use('/user', user);
+app.use('/word', word);
+app.use('/file', file);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

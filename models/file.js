@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
 
-var fileSchema = mongoose.Schema({
-  user: String, //reference?
+const fileSchema = mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   domain: String,
   title: String,
-  type:String,
+  type: String,
   text: String
 });
 
-var file = mongoose.model('File', fileSchema);
+const file = mongoose.model('File', fileSchema);
 
 export default file;
