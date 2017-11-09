@@ -6,7 +6,7 @@ const WordDetailsSchema = mongoose.Schema({
   images: [String],
   sentences: [{
     sentence: String,
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, //reference?
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     countLike: Number,
     location: {lat: Number, lng: Number}
   }]

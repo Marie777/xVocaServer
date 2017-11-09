@@ -13,9 +13,29 @@ router.get('/:word', async (req, res) => {
   } else {
     return res.json(wordDetails);
   }
-
-
 });
+
+router.post('/:word/sentence', async (req, res) => {
+  const word = req.params.word;
+
+  let newSentence = {
+      sentence : req.body.sentence,
+      user: req.user._id,
+      countLike: 0,
+      location: req.body.location
+  }
+
+  await WordDetails.findOneAndUpdate(
+    {word},
+    {$push : {sentences : newSentence}},
+    {safe:true, upsert:true}
+  );
+
+  let newWord = await WordDetails.findOne({word})
+  res.json(newWord);
+});
+
+
 
 router.post('/mockWord', async (req, res) => {
 
