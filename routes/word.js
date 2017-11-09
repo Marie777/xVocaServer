@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import WordDetails from '../models/WordDetails';
+import WordDetails from '../models/wordDetails';
 import mongoose from 'mongoose';
 
 const router = Router();
