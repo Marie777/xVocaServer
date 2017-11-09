@@ -28,7 +28,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use((req, res, next) => {
   const google_token = req.headers.authorization;
 
-  console.log(google_token);
+  //console.log(google_token);
 
   if(!google_token) {
     return res.json({error: "No Authorization header"}).status(403);

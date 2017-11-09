@@ -11,6 +11,7 @@ router.get('/allUsers',(req, res) =>{
   })
 });
 
+//delete route?
 router.get('/:id', async (req,res) =>{
   const id = req.params.id;
 
@@ -29,25 +30,66 @@ router.get('/googleId', async (req,res) =>{
 
 });
 
+router.post('/newDomain', async (req, res) => {
+    const googleId = req.body.googleId;
+
+  //console.log(googleId);
+
+  //how to send json from android?
+  let newDomain = {
+    domainName: req.body.domainName,
+    description: req.body.description,
+    mainDomain: req.body.mainDomain,
+    subDomain: req.body.subDomain,
+    categories:[]
+  }
+
+  //TOOD
+  await User.findOneAndUpdate({googleId}, {$push : {domains : newDomain}},{safe:true, upsert:true});
+
+  //earse domains
+  //let user = await User.findOneAndUpdate({googleId}, {domains : []},{safe:true, upsert:true});
+
+  let user = await User.findOne({googleId});
+  console.log(user);
+  res.json(user);
+
+});
+
+
+router.post('/tokenlogin/google', (req, res) => {
+  res.json(req.user);
+});
+
 router.post('/mockUser', async(req, res) => {
   let user = await User.findOne({googleId: "112470571093225051385"});
   let word1 = {
-    word: "blal_1",
+    word: "word1",
     frequency: 5,
     weight: 6
   }
   let word2 = {
-    word: "blal_2",
+    word: "word2",
+    frequency: 5,
+    weight: 6
+  }
+  let word3 = {
+    word: "word3",
+    frequency: 5,
+    weight: 6
+  }
+  let word4 = {
+    word: "word4",
     frequency: 5,
     weight: 6
   }
   let category1 = {
     categoryName: "category1",
-    wordList: [word1, word1, word1]
+    wordList: [word1, word2, word3]
   }
   let category2 = {
     categoryName: "category2",
-    wordList: [word2, word2, word2]
+    wordList: [word1, word2, word4]
   }
   let domain = {
     domainName: "domain1",
@@ -65,13 +107,11 @@ router.post('/mockUser', async(req, res) => {
   }
   user.domains = [domain, domainn];
   await user.save();
-  res.json( user);
+  console.log(user);
+  res.json(user);
 });
 
 
-router.post('/tokenlogin/google', (req, res) => {
-  res.json(req.user);
-});
 
 
 export default router;
