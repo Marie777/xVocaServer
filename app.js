@@ -12,6 +12,7 @@ import index from './routes/index';
 import user from './routes/user';
 import word from './routes/word';
 import file from './routes/file';
+import analyzetxt from './routes/analyzetxt';
 
 import mongoose from 'mongoose';
 
@@ -27,8 +28,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const google_token = req.headers.authorization;
-
-  //console.log(google_token);
 
   if(!google_token) {
     return res.json({error: "No Authorization header"}).status(403);
@@ -61,6 +60,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/', index);
+app.use('/analyzetxt', analyzetxt);
 app.use('/user', user);
 app.use('/word', word);
 app.use('/file', file);
