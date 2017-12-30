@@ -53,4 +53,22 @@ router.get('/', async (req, res) => {
 
 });
 
+
+router.get('/thesau', (req, res) => {
+  const tcom = require('thesaurus-com');
+  //res.send("ok");
+  res.send(tcom.search('micro'));
+
+});
+
+router.get('/wordNet', (req, res) => {
+  const db = require("wordnet-sqlite");
+  db.get("SELECT definition FROM words WHERE word = 'eat' LIMIT 1;", (err, row) => {
+    if(err)
+      res.send(err);
+    else
+      res.send(row.definition);
+  });
+});
+
 export default router;
