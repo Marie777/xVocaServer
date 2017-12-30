@@ -26,38 +26,38 @@ app.use(logger('dev'));
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use((req, res, next) => {
-  const google_token = req.headers.authorization;
-
-  if(!google_token) {
-    return res.json({error: "No Authorization header"}).status(403);
-  }
-
-  let auth = new GoogleAuth();
-  let client = new auth.OAuth2(google_client_id, '', '');
-  client.verifyIdToken(google_token, google_client_id, async (e, login) => {
-    if(e) {
-      res.json({error: "Auth failed"}).status(400);
-    } else {
-      let payload = login.getPayload();
-      let googleId = payload['sub'];
-
-      let user = await User.findOne({ googleId }).lean();
-
-      if(user === null) {
-        user = await User.create({
-          googleId: payload['sub'],
-          userName: payload['name'],
-          email: payload['email'],
-        });
-      }
-
-      req.user = user;
-      next();
-    }
-  });
-
-});
+// app.use((req, res, next) => {
+//   const google_token = req.headers.authorization;
+//
+//   if(!google_token) {
+//     return res.json({error: "No Authorization header"}).status(403);
+//   }
+//
+//   let auth = new GoogleAuth();
+//   let client = new auth.OAuth2(google_client_id, '', '');
+//   client.verifyIdToken(google_token, google_client_id, async (e, login) => {
+//     if(e) {
+//       res.json({error: "Auth failed"}).status(400);
+//     } else {
+//       let payload = login.getPayload();
+//       let googleId = payload['sub'];
+//
+//       let user = await User.findOne({ googleId }).lean();
+//
+//       if(user === null) {
+//         user = await User.create({
+//           googleId: payload['sub'],
+//           userName: payload['name'],
+//           email: payload['email'],
+//         });
+//       }
+//
+//       req.user = user;
+//       next();
+//     }
+//   });
+//
+// });
 
 app.use('/', index);
 app.use('/analyzetxt', analyzetxt);

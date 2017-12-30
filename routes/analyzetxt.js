@@ -3,6 +3,33 @@ import _ from 'lodash';
 
 const router = Router();
 
+router.get('/watson', async (req, res) => {
+  const NaturalLanguageUnderstandingV1 = require('watson-developer-cloud/natural-language-understanding/v1.js');
+  const natural_language_understanding = new NaturalLanguageUnderstandingV1({
+    'username': '01dcbad3-e023-4943-abea-ae990762c5c6',
+    'password': '50wlIuqqetil',
+    'version_date': '2017-02-27'
+  });
+
+  const parameters = {
+    //'url': 'http://research.ibm.com/tjbot/?lnk=ushpv18f2&lnk2=learn',
+    'text': 'IBM is an American multinational technology company headquartered in Armonk, New York, United States, with operations in over 170 countries.',
+    'features': {
+      'categories': {}
+    }
+  };
+
+  natural_language_understanding.analyze(parameters, (err, response) => {
+    if (err)
+      res.send(err);
+    else
+      res.send(JSON.stringify(response, null, 2));
+  });
+    //es.send("OK");
+});
+
+
+
 router.get('/', async (req, res) => {
 
   const rowtxt = {
