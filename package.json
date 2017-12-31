@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "body-parser": "~1.18.2",
+    "corenlp": "^1.1.8",
     "debug": "~2.6.9",
     "express": "~4.15.5",
     "google-auth-library": "^0.11.0",
@@ -15,6 +16,7 @@
     "mongoose": "^4.12.4",
     "morgan": "~1.9.0",
     "passport": "^0.4.0",
+    "pos": "^0.4.2",
     "thesaurus-com": "^1.1.3",
     "watson-developer-cloud": "^3.0.3",
     "wordnet-sqlite": "^1.0.1"
