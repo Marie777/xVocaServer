@@ -3,6 +3,8 @@ import _ from 'lodash';
 import pdfUtil from 'pdf-to-text';
 import watsonNLU from 'watson-developer-cloud/natural-language-understanding/v1.js';
 import thesaurus from 'thesaurus-com';
+import wordnet from 'wordnet';
+import wordnetSQlite from 'wordnet-sqlite';
 import CoreNLP, { Properties, Pipeline, ConnectorServer } from 'corenlp';
 
 const router = Router();
@@ -55,7 +57,7 @@ const wordFrequency = (text) => {
   const wordsNoInt = _.filter(words, (e) =>  { return !_.isInteger(_.parseInt(e)) });
   const wordsCount = _.countBy(wordsNoInt);
 
-  const wordFrequency = _.map(wordsCount, (value,key) => { return {word:key, count:value, category:null} });
+  const wordFrequency = _.map(wordsCount, (value,key) => { return {word:key, count:value, definition:"",type:""} });
   //--const wordsSorted = _.sortBy(mapy, (e) =>{ return e.count });
   _.orderBy(wordFrequency, ['count'], ['desc']);
 
@@ -69,11 +71,6 @@ const wordFrequency = (text) => {
 
 //-----------------------
 router.get('/', async (req, res) => {
-
-
-
-
-
 
   // const pdf_path = "examlePDF.pdf";
   // pdfUtil.pdfToText(pdf_path, (err, textFromPDF) => {
@@ -95,20 +92,36 @@ router.get('/', async (req, res) => {
         });
       });
 
-      //Watson:
-      natural_language_understanding.analyze(parameters, (err, response) => {
-        if (err)
-          return err;
-        else{
-            _.forEach(listWords, (w) => { w.categoryWatson = response.categories});
-            res.send(listWords);
-        }
-      });
+        //WordNet - definition, type:
+        const wordString = listWords.map(w => `'${w.word.toString()}'`).join(', ');
+        const query = `SELECT * FROM words WHERE word IN (${wordString});`;
+        wordnetSQlite.all(query, (err, rows) => {
+          if(err){
+            console.log(err);
+          }else{
+            const dict = {};
+            rows.forEach(r => dict[r.word] = r);
+            _.forEach(listWords, (w) => {
+                w.definition = dict[w.word] && dict[w.word].definition;
+                w.type = dict[w.word] && dict[w.word].type;
+            });
 
+            //Watson:
+            natural_language_understanding.analyze(parameters, (err, response) => {
+              if (err)
+                return err;
+              else{
+                  _.forEach(listWords, (w) => { w.categoryWatson = response.categories});
+                  res.send(listWords)
+              }
+            });
+          }
+        });
+
+
+      //_.forEach(listWords, (w) => {w.definitionWordNet = thesaurus.search(w)});
       //_.forEach(listWords, (w) => {w.thesaurus = thesaurus.search(w)});
       //console.log(listWords);
-
-
 
   // });
 });
@@ -131,25 +144,23 @@ router.get('/watson', async (req, res) => {
 
 
 
-router.get('/wordNet', (req, res) => {
-  // const wordQuery = "food";
-  // const db = require("wordnet-sqlite");
-  // // db.get("SELECT definition FROM words WHERE word = 'eat' LIMIT 1;", (err, row) => {
-  // db.get(`SELECT definition FROM words WHERE word = '${wordQuery}' LIMIT 1;`, (err, row) => {
-  //   if(err)
-  //     res.send(err);
-  //   else
-  //     res.send(row.definition);
-  // });
-
-  var wordnet = require('wordnet');
-
-  wordnet.lookup('eat', function(err, definitions) {
-    definitions.forEach(function(definition) {
-      //console.log('  words: %s', definitions.trim());
-      res.send(definition);
-    });
+router.get('/wordNet', async (req, res) => {
+  const wordQuery = "food";
+  // wordnetSQlite.get(`SELECT * FROM words WHERE word = '${wordQuery}' LIMIT 1;`, (err, row) => {
+  wordnetSQlite.all(`SELECT * FROM words WHERE word IN ('food', 'eat');`, (err, row) => {
+    if(err)
+      res.send(err);
+    else
+      res.send(row);
   });
+
+
+  // wordnet.lookup('eat', function(err, definitions) {
+  //   definitions.forEach(function(definition) {
+  //     //console.log('  words: %s', definitions.trim());
+  //     res.send(definition);
+  //   });
+  // });
 
 });
 
@@ -165,5 +176,44 @@ router.get('/pos', (req, res) => {
   res.send(taggedWords);
 
 });
+
+const pennPOS = {
+  CC	: 0,
+  CD	: 0.3,
+  DT	: 0,
+  EX	: 0,
+  FW	: 0.7,
+  IN	: 0,
+  JJ	: 0.8,
+  JJR	: 0.7,
+  JJS	: 0.7,
+  LS	: 0,
+  MD	: 0,
+  NN	: 0.9,
+  NNS	: 0.8,
+  NNP	: 0.8,
+  NNPS : 0.8,
+  PDT	: 0,
+  POS	: 0,
+  PRP	: 0,
+  PRP$ : 0,
+  RB	: 0.4,
+  RBR	: 0.4,
+  RBS	: 0.4,
+  RP	: 0,
+  SYM	: 0,
+  TO	: 0,
+  UH	: 0,
+  VB	: 0.5,
+  VBD	: 0.5,
+  VBG	:0.5,
+  VBN	: 0.5,
+  VBP	: 0.5,
+  VBZ	: 0.5,
+  WDT	: 0,
+  WP	: 0.2,
+  WP$	: 0.2,
+  WRB	: 0.4
+};
 
 export default router;
