@@ -57,7 +57,7 @@ const wordFrequency = (text) => {
   const wordsNoInt = _.filter(words, (e) =>  { return !_.isInteger(_.parseInt(e)) });
   const wordsCount = _.countBy(wordsNoInt);
 
-  const wordFrequency = _.map(wordsCount, (value,key) => { return {word:key, count:value, definition:"",type:""} });
+  const wordFrequency = _.map(wordsCount, (value,key) => { return {word:key, count:value, definition:"", type:"", totalWeight:null} });
   //--const wordsSorted = _.sortBy(mapy, (e) =>{ return e.count });
   _.orderBy(wordFrequency, ['count'], ['desc']);
 
@@ -107,19 +107,30 @@ router.get('/', async (req, res) => {
             });
 
             //Watson:
-            natural_language_understanding.analyze(parameters, (err, response) => {
-              if (err)
-                return err;
-              else{
-                  _.forEach(listWords, (w) => { w.categoryWatson = response.categories});
-                  res.send(listWords)
-              }
-            });
+            // natural_language_understanding.analyze(parameters, (err, response) => {
+            //   if (err)
+            //     return err;
+            //   else{
+            //       _.forEach(listWords, (w) => { w.categoryWatson = response.categories});
+
+                  //Weight:
+                  _.forEach(listWords, (w) => {
+                    const typeValue = wordNetType[w.type] ? wordNetType[w.type] : 0.1;
+                    const posCoreNLPValue = pennPOS[w.posCoreNLP[0]] ? pennPOS[w.posCoreNLP[0]] : 0.1;
+                    w.totalWeight = posCoreNLPValue * typeValue;
+                  });
+
+                  //orderBy
+                  let sortedWords = _.orderBy(listWords, ['totalWeight', 'count'], ['desc', 'desc']);
+                  // console.log(listWords);
+                  res.send(sortedWords);
+            //   }
+            // });
           }
         });
 
 
-      //_.forEach(listWords, (w) => {w.definitionWordNet = thesaurus.search(w)});
+
       //_.forEach(listWords, (w) => {w.thesaurus = thesaurus.search(w)});
       //console.log(listWords);
 
@@ -131,17 +142,13 @@ router.get('/', async (req, res) => {
 
 
 router.get('/watson', async (req, res) => {
-
   natural_language_understanding.analyze(parameters, (err, response) => {
     if (err)
       res.send(err);
     else
       res.send(JSON.stringify(response, null, 2));
   });
-
 });
-
-
 
 
 router.get('/wordNet', async (req, res) => {
@@ -153,29 +160,28 @@ router.get('/wordNet', async (req, res) => {
     else
       res.send(row);
   });
-
-
   // wordnet.lookup('eat', function(err, definitions) {
   //   definitions.forEach(function(definition) {
   //     //console.log('  words: %s', definitions.trim());
   //     res.send(definition);
   //   });
   // });
-
 });
 
 
-
 router.get('/pos', (req, res) => {
-
   const pos = require('pos');
   const words = new pos.Lexer().lex(rowtxt.text);
   const tagger = new pos.Tagger();
   const taggedWords = tagger.tag(words);
-
   res.send(taggedWords);
-
 });
+
+const wordNetType = {
+  noun : 0.9,
+  adj : 0.7,
+  adv : 0.6
+};
 
 const pennPOS = {
   CC	: 0,
