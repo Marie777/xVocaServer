@@ -7,28 +7,30 @@
     "dev": "nodemon ./bin/www --exec babel-node"
   },
   "dependencies": {
-    "body-parser": "~1.18.2",
-    "corenlp": "^1.1.8",
+    "body-parser": "^1.18.2",
+    "corenlp": "^1.3.1",
     "debug": "~2.6.9",
-    "express": "~4.15.5",
+    "express": "^4.16.2",
     "google-auth-library": "^0.11.0",
-    "lodash": "^4.17.4",
-    "mongoose": "^4.12.4",
-    "morgan": "~1.9.0",
+    "lodash": "^4.17.5",
+    "mongoose": "^4.13.10",
+    "morgan": "^1.9.0",
     "passport": "^0.4.0",
+    "path": "^0.12.7",
     "pdf-to-text": "0.0.6",
     "pos": "^0.4.2",
     "thesaurus-com": "^1.1.3",
-    "watson-developer-cloud": "^3.0.3",
+    "watson-developer-cloud": "^3.0.6",
+    "watson-developer-cloud-async": "^2.28.2",
     "wordnet": "^0.1.2",
     "wordnet-sqlite": "^1.0.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
-    "eslint": "^4.10.0",
+    "eslint": "^4.17.0",
     "eslint-config-airbnb": "^16.1.0",
-    "eslint-plugin-react": "^7.4.0",
-    "nodemon": "^1.12.1"
+    "eslint-plugin-react": "^7.6.1",
+    "nodemon": "^1.14.12"
   }
 }
