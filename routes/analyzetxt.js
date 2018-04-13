@@ -46,9 +46,6 @@ const corenlpTags = async (text) => {
   const resultCore = await pipeline.annotate(sent);
   if(resultCore){
       const wordsTags = _.map(sent.toJSON().tokens, (value,key) => { return {word:value.word, pos:value.pos} });
-      //Group words according to tags:
-      const groupPOS = _.groupBy(wordsTags, (t) => {return t.pos});
-      const posWords = _.map(groupPOS, (value,key) => {return {pos:key, words:_.map(value, (v,k) =>{return v.word})}});
       return wordsTags;
     }else{
       return err;
@@ -63,16 +60,15 @@ const wordFrequency = (text) => {
   const wordsNoInt = _.filter(words, (e) =>  { return !_.isInteger(_.parseInt(e)) });
   const wordsCount = _.countBy(wordsNoInt);
 
-  const wordFrequency = _.map(wordsCount, (value,key) => { return {word:key, count:value, definition:"", type:"", totalWeight:null} });
-  //--const wordsSorted = _.sortBy(mapy, (e) =>{ return e.count });
+  const wordFrequency = _.map(wordsCount, (value,key) => { return {word:key, count:value, definition:"", type:"", totalWeight:null, posCoreNLP:[]} });
   _.orderBy(wordFrequency, ['count'], ['desc']);
 
-  //--_.map(wordFrequency, (o) => {return o.category = 1});
-  //add field
-  //_.forEach(wordFrequency, (o) => {o.subCategory = "sdf"});
-
-  return wordFrequency;
+  return wordFrequency.reduce((accu, currItem) => {
+    accu[currItem.word] = currItem;
+    return accu;
+  }, {});
 };
+
 
 
 
@@ -105,58 +101,52 @@ router.get('/', async (req, res) => {
       let listWords = wordFrequency(rowtxt.text); //textFromPDF);
 
       //CoreNLP:
-      const wordPosTags = await corenlpTags(rowtxt.text);
-      res.send(wordPosTags);
+      const splitSentences = _.split(rowtxt.text, '.');
+      const promises = splitSentences.map(s => corenlpTags(s));
+      const posTaging = await Promise.all(promises);
 
+      var merged = [].concat.apply([], posTaging);
 
-      _.forEach(listWords, (w) => {
-        w.posCoreNLP = [];
-        _.forEach(wordPosTags, (t) => {
-          if(w.word == t.word){
-            w.posCoreNLP.push(t.pos);
-          }
-        });
-      });
+      merged.forEach(item => {
+        if(listWords[item.word.toLowerCase()])
+          listWords[item.word.toLowerCase()].posCoreNLP.push(item.pos)
+     });
 
-      // res.send(wordPosTags);
 
        // WordNet - definition, type:
-        const wordString = listWords.map(w => `'${w.word.toString()}'`).join(', ');
+        const wordString = Object.keys(listWords).map(key => `'${key.toString()}'`).join(', ');
         const query = `SELECT * FROM words WHERE word IN (${wordString});`;
         wordnetSQlite.all(query, (err, rows) => {
           if(err){
             console.log(err);
           }else{
-            const dict = {};
-            rows.forEach(r => dict[r.word] = r);
-            _.forEach(listWords, (w) => {
-                w.definition = dict[w.word] && dict[w.word].definition;
-                w.type = dict[w.word] && dict[w.word].type;
+            rows.forEach(item => {
+              if(listWords[item.word.toLowerCase()]){
+              listWords[item.word.toLowerCase()].definition = item.definition;
+              listWords[item.word.toLowerCase()].type = item.type;
+              }
             });
-                  //Weight:
-                  _.forEach(listWords, (w) => {
-                    const typeValue = wordNetType[w.type] ? wordNetType[w.type] : 0.1;
-                    const posCoreNLPValue = pennPOS[w.posCoreNLP[0]] ? pennPOS[w.posCoreNLP[0]] : 0.1;
-                    w.totalWeight = posCoreNLPValue * typeValue;
-                  });
-
-                  //add each word? paragraph? Watson category:
-                  //_.forEach(listWords, (w) => { w.categoryWatson = categoryAnalysis.categories}); //TODO: uncomment
-
-                  //orderBy
-                  let sortedWords = _.orderBy(listWords, ['totalWeight', 'count'], ['desc', 'desc']);
-                  // console.log(listWords);
-                  //--- result ---
-                  res.send(sortedWords);
-
           }
-        });
 
+          Object.keys(listWords).forEach((key) => {
+            const word = listWords[key];
+            const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
+            const posCoreNLPValue = pennPOS[word.posCoreNLP[0]] ? pennPOS[word.posCoreNLP[0]] : 0.1;
+            listWords[key].totalWeight = posCoreNLPValue * typeValue; //divide not multiple
+          });
+
+          //orderBy
+          let sortedWords = _.orderBy(listWords, ['totalWeight', 'count'], ['desc', 'desc']);
+          res.send(sortedWords);
+
+        });
 
       //_.forEach(listWords, (w) => {w.thesaurus = thesaurus.search(w)});
       //console.log(listWords);
 
   // });
+
+
 });
 
 
@@ -196,7 +186,7 @@ const wordNetType = {
 
 const pennPOS = {
   CC	: 0,
-  CD	: 0.3,
+  CD	: 0.1,
   DT	: 0,
   EX	: 0,
   FW	: 0.7,
@@ -214,8 +204,8 @@ const pennPOS = {
   POS	: 0,
   PRP	: 0,
   PRP$ : 0,
-  RB	: 0.4,
-  RBR	: 0.4,
+  RB	: 0.1,
+  RBR	: 0.1,
   RBS	: 0.4,
   RP	: 0,
   SYM	: 0,
