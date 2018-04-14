@@ -3,6 +3,9 @@ import _ from 'lodash';
 import fs from 'fs';
 import PDFParser from 'pdf2json';
 import watsonNLU from 'watson-developer-cloud-async/natural-language-understanding/v1.js';
+import language from '@google-cloud/language';
+import Translate from '@google-cloud/translate';
+
 import thesaurus from 'thesaurus-com';
 import wordnet from 'wordnet';
 import wordnetSQlite from 'wordnet-sqlite';
@@ -100,7 +103,83 @@ const readPDF = async (pdfFilePath) => {
 
 
 
+//TODO: Input text (PDF)
+const rowtxt = {
+  text : "The problem problem  related to evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of",
+  text22:"based answers, the intelligence of one",
+  text2: "The purpose of pharmacy compounding has traditionally been to allow a licensed pharmacist to customize a medication for an individual patient whose needs cannot be met by an FDA-approved drug. For example, a patient who is allergic to a certain dye in an FDA-approved drug may need a drug compounded without that ingredient. Similarly, a liquid-compounded drug may best meet the needs of a child or elderly patient who cannot swallow an FDA-approved tablet or capsule. Such prescription-based, individualized compounding by pharmacies continues to fill a niche that mass-produced pharmaceuticals cannot fill. "
 
+};
+
+
+
+
+router.get('/googlenlp', async (req, res) => {
+
+// Instantiates a client
+const client = new language.LanguageServiceClient();
+
+const pdfFilePath = "./examlePDF.pdf";
+const inputTxt = rowtxt.text; // await readPDF(pdfFilePath);
+if(inputTxt){
+
+  const document = {
+    content: inputTxt,
+    type: 'PLAIN_TEXT',
+  };
+
+  // Detects syntax in the document
+  client
+    .analyzeSyntax({document: document})
+    .then(results => {
+      const syntax = results[0];
+      res.send(syntax);
+      //console.log('Tokens:');
+      let posResults = [];
+      syntax.tokens.forEach(part => {
+        //console.log(`${part.partOfSpeech.tag}: ${part.text.content}`);
+        posResults.push(part);
+        //console.log(`Morphology:`, part.partOfSpeech);
+      });
+      // res.send(posResults);
+    })
+    .catch(err => {
+      console.error('ERROR:', err);
+    });
+
+  }
+});
+
+
+router.get('/googletranslate', async (req, res) => {
+
+  // Your Google Cloud Platform project ID
+  const projectId = 'pragmatic-ruler-138019';
+
+  // Instantiates a client
+  const translate = new Translate({
+    projectId: projectId,
+  });
+
+  // The text to translate
+  const text = 'Hello, world!';
+  // The target language
+  const target = 'ru';
+
+  // Translates some text into Russian
+  translate
+    .translate(text, target)
+    .then(results => {
+      const translation = results[0];
+
+      console.log(`Text: ${text}`);
+      console.log(`Translation: ${translation}`);
+    })
+    .catch(err => {
+      console.error('ERROR:', err);
+    });
+
+});
 
 
 
@@ -108,10 +187,11 @@ const readPDF = async (pdfFilePath) => {
 //-----------------------
 router.get('/', async (req, res) => {
 
-    const pdfFilePath = "./examlePDF.pdf";
+    const pdfFilePath = "./abn.pdf";
     const inputTxt = await readPDF(pdfFilePath); //rowtxt.text; //
     if(inputTxt){
 
+      //res.send({inputTxt});
 
       //Watson:
       //const categoryAnalysis = await watsonCategory(rowtxt.text); //TODO: uncomment
@@ -120,16 +200,14 @@ router.get('/', async (req, res) => {
       //Frequent Words:
       let listWords = wordFrequency(inputTxt);
 
+      //coreNLP
       const splitSentences = _.split(inputTxt, '.');
-
       const posTaging = await coreNLPAnalysis(splitSentences);
 
       posTaging.forEach(item => {
         if(listWords[item.word.toLowerCase()])
           listWords[item.word.toLowerCase()].posCoreNLP.push(item.pos)
      });
-
-      //res.send(listWords);
 
 
        // WordNet - definition, type:
@@ -146,6 +224,8 @@ router.get('/', async (req, res) => {
               }
             });
           }
+
+
 
           //Calc weight for word:
           Object.keys(listWords).forEach((key) => {
@@ -171,31 +251,31 @@ router.get('/', async (req, res) => {
 
 
 
-router.get('/wordNet', async (req, res) => {
-  const wordQuery = "food";
-  // wordnetSQlite.get(`SELECT * FROM words WHERE word = '${wordQuery}' LIMIT 1;`, (err, row) => {
-  wordnetSQlite.all(`SELECT * FROM words WHERE word IN ('food', 'eat');`, (err, row) => {
-    if(err)
-      res.send(err);
-    else
-      res.send(row);
-  });
-  // wordnet.lookup('eat', function(err, definitions) {
-  //   definitions.forEach(function(definition) {
-  //     //console.log('  words: %s', definitions.trim());
-  //     res.send(definition);
-  //   });
-  // });
-});
-
-
-router.get('/pos', (req, res) => {
-  const pos = require('pos');
-  const words = new pos.Lexer().lex(rowtxt.text);
-  const tagger = new pos.Tagger();
-  const taggedWords = tagger.tag(words);
-  res.send(taggedWords);
-});
+// router.get('/wordNet', async (req, res) => {
+//   const wordQuery = "food";
+//   // wordnetSQlite.get(`SELECT * FROM words WHERE word = '${wordQuery}' LIMIT 1;`, (err, row) => {
+//   wordnetSQlite.all(`SELECT * FROM words WHERE word IN ('food', 'eat');`, (err, row) => {
+//     if(err)
+//       res.send(err);
+//     else
+//       res.send(row);
+//   });
+//   // wordnet.lookup('eat', function(err, definitions) {
+//   //   definitions.forEach(function(definition) {
+//   //     //console.log('  words: %s', definitions.trim());
+//   //     res.send(definition);
+//   //   });
+//   // });
+// });
+//
+//
+// router.get('/pos', (req, res) => {
+//   const pos = require('pos');
+//   const words = new pos.Lexer().lex(rowtxt.text);
+//   const tagger = new pos.Tagger();
+//   const taggedWords = tagger.tag(words);
+//   res.send(taggedWords);
+// });
 
 const wordNetType = {
   noun : 0.9,
@@ -251,13 +331,6 @@ const pennPOS = {
 export default router;
 
 
-// //TODO: Input text (PDF)
-// const rowtxt = {
-//   text : "The problem problem  related to evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of",
-//   text22:"based answers, the intelligence of one",
-//   text2: "The purpose of pharmacy compounding has traditionally been to allow a licensed pharmacist to customize a medication for an individual patient whose needs cannot be met by an FDA-approved drug. For example, a patient who is allergic to a certain dye in an FDA-approved drug may need a drug compounded without that ingredient. Similarly, a liquid-compounded drug may best meet the needs of a child or elderly patient who cannot swallow an FDA-approved tablet or capsule. Such prescription-based, individualized compounding by pharmacies continues to fill a niche that mass-produced pharmaceuticals cannot fill. "
-//
-// };
 
 
 // //CoreNLP:
