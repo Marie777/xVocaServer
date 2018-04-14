@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import _ from 'lodash';
-//import pdfUtil from 'pdf-to-text';
+import pdfUtil from 'pdf-to-text';
+import fs from 'fs';
+import PDFParser from 'pdf2json';
 import watsonNLU from 'watson-developer-cloud-async/natural-language-understanding/v1.js';
 import thesaurus from 'thesaurus-com';
 import wordnet from 'wordnet';
@@ -57,7 +59,7 @@ const wordFrequency = (text) => {
   //const splittxt = _.split(rowtxt.text, ' ');
   //const uniqWords = _.uniq(words);
   const words = _.words(_.toLower(text));
-  const wordsNoInt = _.filter(words, (e) =>  { return !_.isInteger(_.parseInt(e)) });
+  const wordsNoInt = _.filter(words, (e) =>  { return !_.isInteger(_.parseInt(e)) && e.length > 1});
   const wordsCount = _.countBy(wordsNoInt);
 
   const wordFrequency = _.map(wordsCount, (value,key) => { return {word:key, count:value, definition:"", type:"", totalWeight:null, posCoreNLP:[]} });
@@ -67,6 +69,28 @@ const wordFrequency = (text) => {
     accu[currItem.word] = currItem;
     return accu;
   }, {});
+};
+
+
+const readPDF = async (pdfFilePath) => {
+ return new Promise((res, rej) => {
+   let pdfParser = new PDFParser(this,1);
+   pdfParser.on("pdfParser_dataError", errData => console.error(errData.parserError) );
+   pdfParser.on("pdfParser_dataReady", async pdfData => {
+       res(pdfParser.getRawTextContent());
+   });
+   pdfParser.loadPDF(pdfFilePath);
+ });
+};
+
+
+const readPDF1 = async (pdfFilePath) => {
+  const text = await readPDF(pdfFilePath);
+  if(text){
+    return text;
+  }else{
+    return null;
+  }
 };
 
 
@@ -84,68 +108,68 @@ const rowtxt = {
 
 
 
+
 //-----------------------
 router.get('/', async (req, res) => {
 
-  // const pdf_path = "examlePDF.pdf";
-  // pdfUtil.pdfToText(pdf_path, (err, textFromPDF) => {
-  //     if (err){
-  //       throw(err);
-  //     }
-
-      //Watson:
-      //const categoryAnalysis = await watsonCategory(rowtxt.text); //TODO: uncomment
-      //res.send(JSON.stringify(await watsonCategory(rowtxt.text)));
-
-      //Frequent Words:
-      let listWords = wordFrequency(rowtxt.text); //textFromPDF);
-
-      //CoreNLP:
-      const splitSentences = _.split(rowtxt.text, '.');
-      const promises = splitSentences.map(s => corenlpTags(s));
-      const posTaging = await Promise.all(promises);
-
-      var merged = [].concat.apply([], posTaging);
-
-      merged.forEach(item => {
-        if(listWords[item.word.toLowerCase()])
-          listWords[item.word.toLowerCase()].posCoreNLP.push(item.pos)
-     });
+    const pdfFilePath = "./examlePDF.pdf";
+    const inputTxt = rowtxt.text; // await readPDF(pdfFilePath);
+    if(inputTxt){
 
 
-       // WordNet - definition, type:
-        const wordString = Object.keys(listWords).map(key => `'${key.toString()}'`).join(', ');
-        const query = `SELECT * FROM words WHERE word IN (${wordString});`;
-        wordnetSQlite.all(query, (err, rows) => {
-          if(err){
-            console.log(err);
-          }else{
-            rows.forEach(item => {
-              if(listWords[item.word.toLowerCase()]){
-              listWords[item.word.toLowerCase()].definition = item.definition;
-              listWords[item.word.toLowerCase()].type = item.type;
-              }
-            });
-          }
 
-          Object.keys(listWords).forEach((key) => {
-            const word = listWords[key];
-            const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
-            const posCoreNLPValue = pennPOS[word.posCoreNLP[0]] ? pennPOS[word.posCoreNLP[0]] : 0.1;
-            listWords[key].totalWeight = posCoreNLPValue * typeValue; //divide not multiple
+
+    //Watson:
+    //const categoryAnalysis = await watsonCategory(rowtxt.text); //TODO: uncomment
+    //res.send(JSON.stringify(await watsonCategory(rowtxt.text)));
+
+    //Frequent Words:
+    let listWords = wordFrequency(inputTxt);
+
+    //CoreNLP:
+    const splitSentences = _.split(inputTxt, '.');
+    const promises = splitSentences.map(s => corenlpTags(s));
+    const posTaging = await Promise.all(promises);
+
+    var merged = [].concat.apply([], posTaging);
+
+    merged.forEach(item => {
+      if(listWords[item.word.toLowerCase()])
+        listWords[item.word.toLowerCase()].posCoreNLP.push(item.pos)
+   });
+
+
+     // WordNet - definition, type:
+      const wordString = Object.keys(listWords).map(key => `'${key.toString()}'`).join(', ');
+      const query = `SELECT * FROM words WHERE word IN (${wordString});`;
+      wordnetSQlite.all(query, (err, rows) => {
+        if(err){
+          console.log(err);
+        }else{
+          rows.forEach(item => {
+            if(listWords[item.word.toLowerCase()]){
+            listWords[item.word.toLowerCase()].definition = item.definition;
+            listWords[item.word.toLowerCase()].type = item.type;
+            }
           });
+        }
 
-          //orderBy
-          let sortedWords = _.orderBy(listWords, ['totalWeight', 'count'], ['desc', 'desc']);
-          res.send(sortedWords);
-
+        Object.keys(listWords).forEach((key) => {
+          const word = listWords[key];
+          const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
+          const posCoreNLPValue = pennPOS[word.posCoreNLP[0]] ? pennPOS[word.posCoreNLP[0]] : 0.1;
+          listWords[key].totalWeight = posCoreNLPValue * typeValue; //divide not multiple
         });
 
-      //_.forEach(listWords, (w) => {w.thesaurus = thesaurus.search(w)});
-      //console.log(listWords);
+        //orderBy
+        let sortedWords = _.orderBy(listWords, ['totalWeight', 'count'], ['desc', 'desc']);
+        res.send(sortedWords);
 
-  // });
+      });
 
+    //_.forEach(listWords, (w) => {w.thesaurus = thesaurus.search(w)});
+    //console.log(listWords);
+}
 
 });
 
@@ -224,3 +248,35 @@ const pennPOS = {
 };
 
 export default router;
+
+
+// router.get('/pdfjsn', async (req, res) => {
+//   const pdfFilePath = "./abn.pdf";
+//   const text = await readPDF(pdfFilePath);
+//   if(text){
+//     res.send({text});
+//   }else{
+//     res.send("not");
+//   }
+// });
+
+
+// const readPDF = async () => {
+//  let promiseResolve;
+//  let promise = new Promise(resolve => promiseResolve = resolve);
+//   // const pdfFilePath = "./med.pdf";
+//   const pdfFilePath = "./examlePDF.pdf";
+//   let pdfParser = new PDFParser(this,1);
+//   // let pdfParser = new PDFParser();
+//   pdfParser.on("pdfParser_dataError", errData => console.error(errData.parserError) );
+//   pdfParser.on("pdfParser_dataReady", async pdfData => {
+//       // fs.writeFile("./test.json", JSON.stringify(pdfData));
+//       // return JSON.stringify(pdfData);
+//       // fs.writeFile("./test.txt", pdfParser.getRawTextContent());
+//       // console.log(pdfParser.getRawTextContent());
+//       // return pdfParser.getRawTextContent();
+//       promiseResolve(pdfParser.getRawTextContent());
+//   });
+//   pdfParser.loadPDF(pdfFilePath);
+//   return promise;
+// };
