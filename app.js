@@ -12,9 +12,9 @@ import index from './routes/index';
 import user from './routes/user';
 import word from './routes/word';
 import file from './routes/file';
-import analyzetxt from './routes/analyzetxt';
-import corenlp from './routes/corenlp';
-import watsontest from './routes/watsontest';
+import googleapi from './routes/googleapi';
+import corenlpapi from './routes/corenlpapi';
+import watsonapi from './routes/watsonapi';
 
 import mongoose from 'mongoose';
 
@@ -62,9 +62,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // });
 
 app.use('/', index);
-app.use('/analyzetxt', analyzetxt);
-app.use('/watsontest', watsontest);
-app.use('/corenlp', corenlp);
+app.use('/googleapi', googleapi);
+app.use('/watsonapi', watsonapi);
+app.use('/corenlpapi', corenlpapi);
 app.use('/user', user);
 app.use('/word', word);
 app.use('/file', file);

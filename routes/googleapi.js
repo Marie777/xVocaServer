@@ -1,14 +1,9 @@
 import { Router } from 'express';
-// import _ from 'lodash';
-// import fs from 'fs';
-import PDFParser from 'pdf2json';
 import language from '@google-cloud/language';
 import Translate from '@google-cloud/translate';
 
 
 const router = Router();
-
-
 
 
 router.get('/googlenlp', async (req, res) => {
@@ -100,45 +95,3 @@ export default router;
 // const promises = splitSentences.map(s => corenlpTags(s));
 // const posTaging = await Promise.all(promises);
 //
-
-
-// const readPDF1 = async (pdfFilePath) => {
-//   const text = await readPDF(pdfFilePath);
-//   if(text){
-//     return text;
-//   }else{
-//     return null;
-//   }
-// };
-
-
-// router.get('/pdfjsn', async (req, res) => {
-//   const pdfFilePath = "./abn.pdf";
-//   const text = await readPDF(pdfFilePath);
-//   if(text){
-//     res.send({text});
-//   }else{
-//     res.send("not");
-//   }
-// });
-
-
-// const readPDF = async () => {
-//  let promiseResolve;
-//  let promise = new Promise(resolve => promiseResolve = resolve);
-//   // const pdfFilePath = "./med.pdf";
-//   const pdfFilePath = "./examlePDF.pdf";
-//   let pdfParser = new PDFParser(this,1);
-//   // let pdfParser = new PDFParser();
-//   pdfParser.on("pdfParser_dataError", errData => console.error(errData.parserError) );
-//   pdfParser.on("pdfParser_dataReady", async pdfData => {
-//       // fs.writeFile("./test.json", JSON.stringify(pdfData));
-//       // return JSON.stringify(pdfData);
-//       // fs.writeFile("./test.txt", pdfParser.getRawTextContent());
-//       // console.log(pdfParser.getRawTextContent());
-//       // return pdfParser.getRawTextContent();
-//       promiseResolve(pdfParser.getRawTextContent());
-//   });
-//   pdfParser.loadPDF(pdfFilePath);
-//   return promise;
-// };

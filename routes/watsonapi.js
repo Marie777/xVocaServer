@@ -1,10 +1,8 @@
 import { Router } from 'express';
 import fs from 'fs';
-import watson from 'watson-developer-cloud';
+// import watson from 'watson-developer-cloud';
 import watsonNLU from 'watson-developer-cloud-async/natural-language-understanding/v1.js';
 import LanguageTranslatorV2 from 'watson-developer-cloud/language-translator/v2';
-// import watsonDocumentConversion from 'watson-developer-cloud-async/document-conversion/v1.js';
-
 import DiscoveryV1 from 'watson-developer-cloud/discovery/v1';
 
 const router = Router();
@@ -25,6 +23,14 @@ const natural_language_understanding = new watsonNLU({
   'password': '50wlIuqqetil',
   'version_date': '2017-02-27'
 });
+
+//Watson discovery
+const discovery = new DiscoveryV1({
+  username: '9ef092d8-2dfd-4012-b90d-60ef455e9fe1',
+  password: 'ECvXf8GMV7s7',
+  version_date: '2017-11-07'
+});
+
 
 //Watson credentials translate
 const languageTranslator = new LanguageTranslatorV2({
@@ -85,19 +91,18 @@ const env = {
 };
 
 
-router.get('/', async (req, res) => {
+//TODO:
+// add document - to discory
+// query text - from discory
+// --> save text to mongodb
+// remove document - from discory
 
-
-  const discovery = new DiscoveryV1({
-    username: '9ef092d8-2dfd-4012-b90d-60ef455e9fe1',
-    password: 'ECvXf8GMV7s7',
-    version_date: '2017-11-07'
-  });
+router.get('/discovery', async (req, res) => {
 
   const parmEnv = {
     environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
     collection_id: '5cb98f3b-f9e7-406d-92a3-8dcd3195da2d',
-    query: 'examlePDF.pdf'
+    query: 'abn.pdf'
   }
 
 
@@ -111,7 +116,6 @@ router.get('/', async (req, res) => {
   });
 
 
-
 });
 
 
@@ -122,19 +126,22 @@ router.get('/', async (req, res) => {
 
 
 
-
-
-
-
-router.get('/testing', async (req, res) => {
+router.get('/category', async (req, res) => {
   // const pdfFilePath = "./examlePDF.pdf";
   // const inputTxt = await readPDF(pdfFilePath); // rowtxt.text; //
   // if(inputTxt){
 
-    //category:
-    // const categoryAnalysis = await watsonCategory(rowtxt.text); //TODO: uncomment
-    // res.send(JSON.stringify(categoryAnalysis));
+    category:
+    const categoryAnalysis = await watsonCategory(rowtxt.text); //TODO: uncomment
+    res.send(JSON.stringify(categoryAnalysis));
 
+  // }
+
+});
+
+
+
+router.get('/translate', async (req, res) => {
 
     // //translate:
     const parm = {
@@ -151,122 +158,10 @@ router.get('/testing', async (req, res) => {
       }
     });
 
-    // languageTranslator.identify(
-    //   {
-    //     text:
-    //       'The language translator service takes text input and identifies the language used.'
-    //   },
-    //   function(err, language) {
-    //     if (err)  {
-    //       console.log('error:', err);
-    //     } else {
-    //       console.log(JSON.stringify(language, null, 2));
-    //     }
-    //   }
-    // );
-
-// }
-
-
-
 });
-
-
-
-
-//
-//
-//
-// const watson_doc_conversion = new watsonDocumentConversion({
-//   username: "7ee0f3d4-f158-4575-b5e2-cc92e1d56f17",
-//   password: "Dhap78ZUx3tf",
-// });
-//
-
-
-
-
-
-// //Watson connection
-// const document_conversion = new watsonDocumentConversion({
-// //  url: "https://gateway.watsonplatform.net/discovery/api",
-//   username:     '6b7b4c72-5e37-46f1-8146-be9e40a13205',
-//   password:     'yCinuoAmOaLe',
-//   version:      'v1',
-//   version_date: '2015-12-15'
-// });
-//
-//
-
-//
-//
-// // custom configuration - document conversion
-// const config = {
-//   word: {
-//     heading: {
-//       fonts: [
-//         { level: 1, min_size: 24 },
-//         { level: 2, min_size: 16, max_size: 24 }
-//       ]
-//     }
-//   }
-// };
-//
-//
-// router.get('/doconvert', async (req, res) => {
-//
-//   await document_conversion.convert({
-//       file: fs.createReadStream("./examlePDF.pdf"),
-//       conversion_target: document_conversion.conversion_target.ANSWER_UNITS, //'ANSWER_UNITS',
-//       // Use a custom configuration.
-//       config: config
-//     }, function (err, response) {
-//       if (err) {
-//         console.log("---------------");
-//         console.error(err);
-//       } else {
-//         console.log(JSON.stringify(response, null, 2));
-//       }
-//     });
-//
-//     res.send("watson...");
-//
-// });
-
-
-
-
 
 
 
 
 
 export default router;
-
-
-// router.get('/watsont', async (req, res) => {
-//
-//   // convert a single document
-//   await watson_doc_conversion.convert({
-//     // (JSON) ANSWER_UNITS, NORMALIZED_HTML, or NORMALIZED_TEXT
-//     file: fs.createReadStream("./examlePDF.pdf"),
-//     conversion_target: watson_doc_conversion.conversion_target.ANSWER_UNITS,
-//     // Add custom configuration properties or omit for defaults
-//     word: {
-//       heading: {
-//         fonts: [
-//           { level: 1, min_size: 24 },
-//           { level: 2, min_size: 16, max_size: 24 }
-//         ]
-//       }
-//     }
-//   }, function (err, response) {
-//     if (err) {
-//       console.error(err);
-//     } else {
-//       console.log(JSON.stringify(response, null, 2));
-//     }
-//   });
-// res.send("watsont");
-//
-// });
