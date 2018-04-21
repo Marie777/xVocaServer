@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import fs from 'fs';
-// import watson from 'watson-developer-cloud';
 import watsonNLU from 'watson-developer-cloud-async/natural-language-understanding/v1.js';
 import LanguageTranslatorV2 from 'watson-developer-cloud/language-translator/v2';
 import DiscoveryV1 from 'watson-developer-cloud/discovery/v1';
@@ -24,7 +23,7 @@ const natural_language_understanding = new watsonNLU({
   'version_date': '2017-02-27'
 });
 
-//Watson discovery
+//Watson credentials discovery
 const discovery = new DiscoveryV1({
   username: '9ef092d8-2dfd-4012-b90d-60ef455e9fe1',
   password: 'ECvXf8GMV7s7',
@@ -57,73 +56,103 @@ const watsonCategory = async (text) => {
     }
 };
 
+// const discoveryEnv = {
+//   environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
+//   collection_id: '5cb98f3b-f9e7-406d-92a3-8dcd3195da2d'
+// };
 
-const env = {
-  "environment_id": "6b787e7f-34a4-425d-8615-78aee2d1ce6c",
-  "name": "xvoca-discovery-1523972904425",
-  "description": "My environment",
-  "created": "2018-04-18T10:41:02.798Z",
-  "updated": "2018-04-18T10:41:02.798Z",
-  "status": "active",
-  "read_only": false,
-  "index_capacity": {
-    "documents": {
-      "available": 0,
-      "maximum_allowed": 2000
-    },
-    "disk_usage": {
-      "used_bytes": 0,
-      "maximum_allowed_bytes": 200000000
-    },
-    "collections": {
-      "available": 0,
-      "maximum_allowed": 0
-    }
-  },
-  "notices": [
-    {
-      "notice_id": "size_not_supported",
-      "created": "2018-04-18T10:41:02.809Z",
-      "severity": "warning",
-      "description": "The \"size\" property is no longer supported."
-    }
-  ]
+const discoveryEnv = {
+  environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
+  collection_id: 'd8d7fc9e-eb7e-49d5-b5e1-c2b03f12b3a1'
 };
 
 
-//TODO:
-// add document - to discory
-// query text - from discory
-// --> save text to mongodb
-// remove document - from discory
+//Delete document from discovery
+const discoveryDelete = async (document_id) => {
+  const parmDelete = {
+    environment_id: discoveryEnv.environment_id,
+    collection_id: discoveryEnv.collection_id,
+    document_id
+  };
+
+  return new Promise((res,rej) => {
+    discovery.deleteDocument(parmDelete, (error, data) => {
+      if(error){
+        // console.log(error);
+        rej(error);
+      }else{
+        // console.log(JSON.stringify(data, null, 2));
+        res(data);
+      }
+    });
+  });
+};
+
+
+
+
+//Add document to discovery
+const discoveryAdd = async (pathFile) => {
+  const file = fs.readFileSync(pathFile);
+
+  const parmAdd = {
+    environment_id: discoveryEnv.environment_id,
+    collection_id: discoveryEnv.collection_id,
+    file
+  };
+  return new Promise((res,rej) => {
+    discovery.addDocument(parmAdd, (error, data) => {
+      if(error){
+        console.log(err);
+        rej(err);
+      }else{
+        console.log(JSON.stringify(data, null, 2));
+        res(data);
+      }
+    });
+  });
+
+};
+
+
+//Retrieve document from discovery
+const discoveryRetrieve = async (query) => {
+  const parmRetrieve = {
+    environment_id: discoveryEnv.environment_id,
+    collection_id: discoveryEnv.collection_id,
+    query
+  };
+
+  return new Promise((res,rej) => {
+    discovery.query(parmRetrieve, (error, data) => {
+      if(error){
+        // console.log(error);
+        rej(error);
+      }else{
+        // console.log(JSON.stringify(data, null, 2));
+        res(data);
+      }
+    });
+  });
+};
+
+
+
+
 
 router.get('/discovery', async (req, res) => {
 
-  const parmEnv = {
-    environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
-    collection_id: '5cb98f3b-f9e7-406d-92a3-8dcd3195da2d',
-    query: 'abn.pdf'
-  }
+  const name_file = 'multi6.pdf';
+  // const currentDoc = await discoveryAdd("./" + name_file);
+  const infoDoc = await discoveryRetrieve(name_file);
 
+  //TODO: --> save text to mongodb
 
-  discovery.query(parmEnv, (error, data) => {
-    if(error){
-      console.log(error);
-    }else{
-    //console.log(JSON.stringify(data, null, 2));
-    res.send(data);
-    }
-  });
+  // res.send(await discoveryDelete(currentDoc.document_id));
+
 
 
 });
-
-
-
-
-
-
-
 
 
 router.get('/category', async (req, res) => {
@@ -165,3 +194,35 @@ router.get('/translate', async (req, res) => {
 
 
 export default router;
+
+// const env = {
+//   "environment_id": "6b787e7f-34a4-425d-8615-78aee2d1ce6c",
+//   "name": "xvoca-discovery-1523972904425",
+//   "description": "My environment",
+//   "created": "2018-04-18T10:41:02.798Z",
+//   "updated": "2018-04-18T10:41:02.798Z",
+//   "status": "active",
+//   "read_only": false,
+//   "index_capacity": {
+//     "documents": {
+//       "available": 0,
+//       "maximum_allowed": 2000
+//     },
+//     "disk_usage": {
+//       "used_bytes": 0,
+//       "maximum_allowed_bytes": 200000000
+//     },
+//     "collections": {
+//       "available": 0,
+//       "maximum_allowed": 0
+//     }
+//   },
+//   "notices": [
+//     {
+//       "notice_id": "size_not_supported",
+//       "created": "2018-04-18T10:41:02.809Z",
+//       "severity": "warning",
+//       "description": "The \"size\" property is no longer supported."
+//     }
+//   ]
+// };

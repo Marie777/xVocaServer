@@ -196,3 +196,9 @@ const pennPOS = {
 };
 
 export default router;
+
+// //CoreNLP:
+// const splitSentences = _.split(inputTxt, '.');
+// const promises = splitSentences.map(s => corenlpTags(s));
+// const posTaging = await Promise.all(promises);
+//
