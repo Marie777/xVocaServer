@@ -4,16 +4,11 @@ import watsonNLU from 'watson-developer-cloud-async/natural-language-understandi
 import LanguageTranslatorV2 from 'watson-developer-cloud/language-translator/v2';
 import DiscoveryV1 from 'watson-developer-cloud/discovery/v1';
 
+import file from '../models/file';
+import User from '../models/user';
+import mongoose from 'mongoose';
+
 const router = Router();
-
-//TODO: Input text (PDF)
-const rowtxt = {
-  text : "The problem problem  related to evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of",
-  text22:"based answers, the intelligence of one",
-  text2: "The purpose of pharmacy compounding has traditionally been to allow a licensed pharmacist to customize a medication for an individual patient whose needs cannot be met by an FDA-approved drug. For example, a patient who is allergic to a certain dye in an FDA-approved drug may need a drug compounded without that ingredient. Similarly, a liquid-compounded drug may best meet the needs of a child or elderly patient who cannot swallow an FDA-approved tablet or capsule. Such prescription-based, individualized compounding by pharmacies continues to fill a niche that mass-produced pharmaceuticals cannot fill. "
-
-};
-
 
 
 //Watson credentials NLU
@@ -103,10 +98,10 @@ const discoveryAdd = async (pathFile) => {
   return new Promise((res,rej) => {
     discovery.addDocument(parmAdd, (error, data) => {
       if(error){
-        console.log(err);
+        // console.log(err);
         rej(err);
       }else{
-        console.log(JSON.stringify(data, null, 2));
+        // console.log(JSON.stringify(data, null, 2));
         res(data);
       }
     });
@@ -142,13 +137,30 @@ const discoveryRetrieve = async (query) => {
 
 router.get('/discovery', async (req, res) => {
 
-  const name_file = 'multi6.pdf';
-  // const currentDoc = await discoveryAdd("./" + name_file);
-  const infoDoc = await discoveryRetrieve(name_file);
+   const name_file = 'multi6.pdf';
+   const currentDoc = await discoveryAdd("./" + name_file);
+   let infoDoc = await discoveryRetrieve(name_file);
 
-  //TODO: --> save text to mongodb
 
-  // res.send(await discoveryDelete(currentDoc.document_id));
+   //TODO: get user and domain from body
+
+    let newFile = {
+      user: "5adda418da6ab03bd876c0f6",
+      domain: "blaaaa",
+      title: "ds",
+      type: "df",
+      text: infoDoc.results[0]
+    };
+
+
+    const filee = await file.create(newFile);
+    res.send(filee);
+
+
+    //TODO: wait and then delete
+    await discoveryDelete(currentDoc.document_id);
+
+    //TODO: find documents according to user and domain
 
 
 
@@ -160,8 +172,10 @@ router.get('/category', async (req, res) => {
   // const inputTxt = await readPDF(pdfFilePath); // rowtxt.text; //
   // if(inputTxt){
 
-    category:
-    const categoryAnalysis = await watsonCategory(rowtxt.text); //TODO: uncomment
+  const text = "The problem problem  related to evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of";
+
+  //  category:
+    const categoryAnalysis = await watsonCategory(text); //TODO: uncomment
     res.send(JSON.stringify(categoryAnalysis));
 
   // }

@@ -5,7 +5,7 @@ const fileSchema = mongoose.Schema({
   domain: String,
   title: String,
   type: String,
-  text: String
+  text: Object
 });
 
 const file = mongoose.model('File', fileSchema);
