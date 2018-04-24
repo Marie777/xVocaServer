@@ -14,7 +14,7 @@ import word from './routes/word';
 import file from './routes/file';
 import googleapi from './routes/googleapi';
 import corenlpapi from './routes/corenlpapi';
-import watsonapi from './routes/watsonapi';
+// import watsonapi from './routes/watsonapi';
 
 import mongoose from 'mongoose';
 
@@ -63,7 +63,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use('/', index);
 app.use('/googleapi', googleapi);
-app.use('/watsonapi', watsonapi);
+// app.use('/watsonapi', watsonapi);
 app.use('/corenlpapi', corenlpapi);
 app.use('/user', user);
 app.use('/word', word);

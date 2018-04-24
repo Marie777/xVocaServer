@@ -1,14 +1,14 @@
-import { Router } from 'express';
+// import { Router } from 'express';
 import fs from 'fs';
 import watsonNLU from 'watson-developer-cloud-async/natural-language-understanding/v1.js';
 import LanguageTranslatorV2 from 'watson-developer-cloud/language-translator/v2';
 import DiscoveryV1 from 'watson-developer-cloud/discovery/v1';
 
 import file from '../models/file';
-import User from '../models/user';
+// import User from '../models/user';
 import mongoose from 'mongoose';
 
-const router = Router();
+// const router = Router();
 
 
 //Watson credentials NLU
@@ -56,6 +56,7 @@ const watsonCategory = async (text) => {
 //   collection_id: '5cb98f3b-f9e7-406d-92a3-8dcd3195da2d'
 // };
 
+//Xvoca collection:
 const discoveryEnv = {
   environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
   collection_id: 'd8d7fc9e-eb7e-49d5-b5e1-c2b03f12b3a1'
@@ -134,80 +135,69 @@ const discoveryRetrieve = async (query) => {
 
 
 
+const convertToTxt = async (param_file) => {
+  let currentDoc = await discoveryAdd("./" + param_file.title);
+  let infoDoc = await discoveryRetrieve(param_file.title);
+  let newFile = {
+    user: param_file.user,
+    domain: param_file.domain,
+    title: param_file.title,
+    type: param_file.type,
+    text: infoDoc.results[0],
+    analyzeResults: null     //check?
+  };
+  return( await file.create(newFile));
 
-router.get('/discovery', async (req, res) => {
-
-   const name_file = 'multi6.pdf';
-   const currentDoc = await discoveryAdd("./" + name_file);
-   let infoDoc = await discoveryRetrieve(name_file);
-
-
-   //TODO: get user and domain from body
-
-    let newFile = {
-      user: "5adda418da6ab03bd876c0f6",
-      domain: "blaaaa",
-      title: "ds",
-      type: "df",
-      text: infoDoc.results[0]
-    };
+};
 
 
-    const filee = await file.create(newFile);
-    res.send(filee);
-
-
-    //TODO: wait and then delete
-    await discoveryDelete(currentDoc.document_id);
-
-    //TODO: find documents according to user and domain
+const deleteFromDiscovery = async (document_id) => {
+  console.log(document_id);        //check: document_id
+  return(await discoveryDelete(document_id));
+}
 
 
 
-});
-
-
-router.get('/category', async (req, res) => {
-  // const pdfFilePath = "./examlePDF.pdf";
-  // const inputTxt = await readPDF(pdfFilePath); // rowtxt.text; //
-  // if(inputTxt){
-
-  const text = "The problem problem  related to evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of";
-
-  //  category:
-    const categoryAnalysis = await watsonCategory(text); //TODO: uncomment
-    res.send(JSON.stringify(categoryAnalysis));
-
-  // }
-
-});
-
-
-
-router.get('/translate', async (req, res) => {
-
-    // //translate:
-    const parm = {
-      text: 'A sentence must have a verb',
-      source: 'en',
-      target: 'es'
-    };
-
-    languageTranslator.translate(parm, (err, translation) =>{
-      if (err)  {
-        console.log('error:', err);
-      } else  {
-        console.log(JSON.stringify(translation, null, 2));
-      }
-    });
-
-});
+// router.get('/category', async (req, res) => {
+//   // const pdfFilePath = "./examlePDF.pdf";
+//   // const inputTxt = await readPDF(pdfFilePath); // rowtxt.text; //
+//   // if(inputTxt){
+//
+//   const text = "The problem problem  related to evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of";
+//
+//   //  category:
+//     const categoryAnalysis = await watsonCategory(text); //TODO: uncomment
+//     res.send(JSON.stringify(categoryAnalysis));
+//
+//   // }
+//
+// });
+//
+//
+//
+// router.get('/translate', async (req, res) => {
+//
+//     // //translate:
+//     const parm = {
+//       text: 'A sentence must have a verb',
+//       source: 'en',
+//       target: 'es'
+//     };
+//
+//     languageTranslator.translate(parm, (err, translation) =>{
+//       if (err)  {
+//         console.log('error:', err);
+//       } else  {
+//         console.log(JSON.stringify(translation, null, 2));
+//       }
+//     });
+//
+// });
 
 
 
 
-
-export default router;
+export {convertToTxt, deleteFromDiscovery};
 
 // const env = {
 //   "environment_id": "6b787e7f-34a4-425d-8615-78aee2d1ce6c",
