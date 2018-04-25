@@ -4,12 +4,6 @@ import watsonNLU from 'watson-developer-cloud-async/natural-language-understandi
 import LanguageTranslatorV2 from 'watson-developer-cloud/language-translator/v2';
 import DiscoveryV1 from 'watson-developer-cloud/discovery/v1';
 
-import file from '../models/file';
-// import User from '../models/user';
-import mongoose from 'mongoose';
-
-// const router = Router();
-
 
 //Watson credentials NLU
 const natural_language_understanding = new watsonNLU({
@@ -59,7 +53,7 @@ const watsonCategory = async (text) => {
 //Xvoca collection:
 const discoveryEnv = {
   environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
-  collection_id: 'd8d7fc9e-eb7e-49d5-b5e1-c2b03f12b3a1'
+  collection_id: 'ea9af8f5-4d17-4b7e-ab1d-def3a2deb643'
 };
 
 
@@ -112,11 +106,10 @@ const discoveryAdd = async (pathFile) => {
 
 
 //Retrieve document from discovery
-const discoveryRetrieve = async (query) => {
+const discoveryRetrieve = async () => {
   const parmRetrieve = {
     environment_id: discoveryEnv.environment_id,
-    collection_id: discoveryEnv.collection_id,
-    query
+    collection_id: discoveryEnv.collection_id
   };
 
   return new Promise((res,rej) => {
@@ -135,18 +128,9 @@ const discoveryRetrieve = async (query) => {
 
 
 
-const convertToTxt = async (param_file) => {
-  let currentDoc = await discoveryAdd("./" + param_file.title);
-  let infoDoc = await discoveryRetrieve(param_file.title);
-  let newFile = {
-    user: param_file.user,
-    domain: param_file.domain,
-    title: param_file.title,
-    type: param_file.type,
-    text: infoDoc.results[0],
-    analyzeResults: null     //check?
-  };
-  return( await file.create(newFile));
+const convertToTxt = async (file_name) => {
+  await discoveryAdd("./" + file_name);
+  return(await discoveryRetrieve());
 
 };
 
@@ -198,35 +182,3 @@ const deleteFromDiscovery = async (document_id) => {
 
 
 export {convertToTxt, deleteFromDiscovery};
-
-// const env = {
-//   "environment_id": "6b787e7f-34a4-425d-8615-78aee2d1ce6c",
-//   "name": "xvoca-discovery-1523972904425",
-//   "description": "My environment",
-//   "created": "2018-04-18T10:41:02.798Z",
-//   "updated": "2018-04-18T10:41:02.798Z",
-//   "status": "active",
-//   "read_only": false,
-//   "index_capacity": {
-//     "documents": {
-//       "available": 0,
-//       "maximum_allowed": 2000
-//     },
-//     "disk_usage": {
-//       "used_bytes": 0,
-//       "maximum_allowed_bytes": 200000000
-//     },
-//     "collections": {
-//       "available": 0,
-//       "maximum_allowed": 0
-//     }
-//   },
-//   "notices": [
-//     {
-//       "notice_id": "size_not_supported",
-//       "created": "2018-04-18T10:41:02.809Z",
-//       "severity": "warning",
-//       "description": "The \"size\" property is no longer supported."
-//     }
-//   ]
-// };

@@ -1,50 +1,46 @@
-import { Router } from 'express';
 import language from '@google-cloud/language';
 import Translate from '@google-cloud/translate';
 
+const tags = {
+  UNKNOWN	: 0,
+  ADJ	: 0.7,
+  ADP	: 0,
+  ADV	: 0,
+  CONJ	: 0,
+  DET	: 0,
+  NOUN	: 0.9,
+  NUM	: 0,
+  PRON	: 0,
+  PRT : 0,
+  PUNCT	: 0,
+  VERB	: 0.8,
+  X	: 0,
+  AFFIX: 0
+};
 
-const router = Router();
 
-
-router.get('/googlenlp', async (req, res) => {
-
-// Instantiates a client
-const client = new language.LanguageServiceClient();
-
-const pdfFilePath = "./examlePDF.pdf";
-const inputTxt = rowtxt.text; // await readPDF(pdfFilePath);
-if(inputTxt){
-
+const posTagging = async (content) => {
+  // Instantiates a client
+  const client = new language.LanguageServiceClient();
   const document = {
-    content: inputTxt,
+    content,
     type: 'PLAIN_TEXT',
   };
 
-  // Detects syntax in the document
-  client
-    .analyzeSyntax({document: document})
-    .then(results => {
-      const syntax = results[0];
-      res.send(syntax);
-      //console.log('Tokens:');
-      let posResults = [];
-      syntax.tokens.forEach(part => {
-        //console.log(`${part.partOfSpeech.tag}: ${part.text.content}`);
-        posResults.push(part);
-        //console.log(`Morphology:`, part.partOfSpeech);
-      });
-      // res.send(posResults);
-    })
-    .catch(err => {
-      console.error('ERROR:', err);
+  return new Promise((res, rej) => {
+    // Detects syntax in the document
+    client
+      .analyzeSyntax({document})
+      .then(results => res(results[0]))
+      .catch(err => rej(err));
     });
 
-  }
-});
+};
 
 
-router.get('/googletranslate', async (req, res) => {
 
+
+const translate = async () => {
   // Your Google Cloud Platform project ID
   const projectId = 'pragmatic-ruler-138019';
 
@@ -70,19 +66,8 @@ router.get('/googletranslate', async (req, res) => {
     .catch(err => {
       console.error('ERROR:', err);
     });
-
-});
-
+};
 
 
 
-//-----------------------
-router.get('/', async (req, res) => {
-
-
-
-});
-
-
-
-export default router;
+export {posTagging, tags, translate};

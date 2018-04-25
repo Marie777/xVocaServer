@@ -35,7 +35,6 @@ router.post('/newDomain', async (req, res) => {
 
   //console.log(googleId);
 
-  //how to send json from android?
   let newDomain = {
     domainName: req.body.domainName,
     description: req.body.description,
@@ -62,7 +61,7 @@ router.post('/tokenlogin/google', (req, res) => {
 });
 
 router.post('/mockUser', async(req, res) => {
-  let user = await User.findOne({googleId: "112470571093225051385"});
+  let user = await User.findOne({googleId: "112470571093225051385"}); 
   let word1 = {
     word: "word1",
     frequency: 5,

@@ -1,7 +1,9 @@
 import { Router } from 'express';
-import mongoose from 'mongoose';
 import fs from "fs";
+import mongoose from 'mongoose';
+import file from '../models/file';
 import {convertToTxt, deleteFromDiscovery} from './watsonapi';
+import {analyzeTextAlgo} from './analyzetxt';
 
 const router = Router();
 
@@ -21,31 +23,45 @@ router.post('/pdf', async (req, res) => {
 });
 
 
-//Convert pdf to text (watson discovery) and save to mongodb
-router.get('/convertpdf', async (req, res) => {
-  let param_file = {
+//save to mongodb
+const saveTxtDB = async (infoDoc) => {
+
+  // TODO: userId, domain, title, type -> from req body
+  let newFile = {
     user: "5adda418da6ab03bd876c0f6",
     domain: "blaaaa",
     title: "multi6.pdf",
-    type: "df"
+    type: "df",
+    text: infoDoc.results[0]
   };
+  return(await file.create(newFile));
+};
 
 
-  const mongoRecord = await convertToTxt(param_file);
-  const doc_id = mongoRecord.text.id;
+//Convert pdf to text (watson discovery)
+router.get('/convertpdf', async (req, res) => {
 
-  //Delete pdf from watson discovery
-  // setTimeout(async (doc_id)=>{  }, 15000);
+  //TODO: file name from req body
+  const infoDoc = await convertToTxt("4p.pdf");
+  const mongoRec = await saveTxtDB(infoDoc);
+  const text = mongoRec.text.text;
+  // res.send({text});
 
-  res.send(mongoRecord);
+  try{
+    res.send(await analyzeTextAlgo(text));
+  }catch(error){
+    res.send(error);
+  }
 
 });
 
 
-//id: "b12d66a5-8e31-45c1-8f8e-5e292c72f223"
+
+
+
 //TODO: Delete pdf from watson discovery
 router.get('/deletediscovery', async (req, res) => {
-  res.send(await deleteFromDiscovery("b12d66a5-8e31-45c1-8f8e-5e292c72f223"));
+  res.send(await deleteFromDiscovery("211a26f9-5ad4-4c85-b8de-6822aa6fb346"));
 });
 
 
