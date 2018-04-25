@@ -14,8 +14,6 @@ import word from './routes/word';
 import file from './routes/file';
 import corenlpapi from './routes/corenlpapi';
 import analyzetxt from './routes/analyzetxt';
-// import watsonapi from './routes/watsonapi';
-// import googleapi from './routes/googleapi';
 
 import mongoose from 'mongoose';
 
@@ -64,8 +62,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use('/', index);
 app.use('/analyzetxt', analyzetxt);
-// app.use('/googleapi', googleapi);
-// app.use('/watsonapi', watsonapi);
 app.use('/corenlpapi', corenlpapi);
 app.use('/user', user);
 app.use('/word', word);

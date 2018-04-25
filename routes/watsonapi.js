@@ -53,7 +53,7 @@ const watsonCategory = async (text) => {
 //Xvoca collection:
 const discoveryEnv = {
   environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
-  collection_id: 'ea9af8f5-4d17-4b7e-ab1d-def3a2deb643'
+  collection_id: '810cc2cb-1147-4bc8-80cf-b3acf06ae10a'
 };
 
 
@@ -68,7 +68,7 @@ const discoveryDelete = async (document_id) => {
   return new Promise((res,rej) => {
     discovery.deleteDocument(parmDelete, (error, data) => {
       if(error){
-        // console.log(error);
+        console.log("discoveryDelete err");
         rej(error);
       }else{
         // console.log(JSON.stringify(data, null, 2));
@@ -93,8 +93,8 @@ const discoveryAdd = async (pathFile) => {
   return new Promise((res,rej) => {
     discovery.addDocument(parmAdd, (error, data) => {
       if(error){
-        // console.log(err);
-        rej(err);
+        console.log("discoveryAdd err");
+        rej(error);
       }else{
         // console.log(JSON.stringify(data, null, 2));
         res(data);
@@ -115,7 +115,7 @@ const discoveryRetrieve = async () => {
   return new Promise((res,rej) => {
     discovery.query(parmRetrieve, (error, data) => {
       if(error){
-        // console.log(error);
+        console.log("discoveryRetrieve err");
         rej(error);
       }else{
         // console.log(JSON.stringify(data, null, 2));

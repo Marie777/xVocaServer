@@ -42,7 +42,7 @@ const saveTxtDB = async (infoDoc) => {
 router.get('/convertpdf', async (req, res) => {
 
   //TODO: file name from req body
-  const infoDoc = await convertToTxt("4p.pdf");
+  const infoDoc = await convertToTxt("multi6.pdf");
   const mongoRec = await saveTxtDB(infoDoc);
   const text = mongoRec.text.text;
   // res.send({text});
