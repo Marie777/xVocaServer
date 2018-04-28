@@ -57,9 +57,7 @@ router.get('/convertpdf', async (req, res) => {
 
 
 
-
-
-//TODO: Delete pdf from watson discovery
+//TODO: Delete pdf from watson discovery - id from request
 router.get('/deletediscovery', async (req, res) => {
   res.send(await deleteFromDiscovery("211a26f9-5ad4-4c85-b8de-6822aa6fb346"));
 });

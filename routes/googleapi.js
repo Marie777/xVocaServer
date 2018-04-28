@@ -37,7 +37,24 @@ const posTagging = async (content) => {
 
 };
 
+//TODO: pos tagging from HTML
+const posTaggingHTML = async (url) => {
+  // Instantiates a client
+  const client = new language.LanguageServiceClient();
+  const document = {
+    content: url,
+    type: 'HTML',
+  };
 
+  return new Promise((res, rej) => {
+    // Detects syntax in the document
+    client
+      .analyzeSyntax({document})
+      .then(results => res(results[0]))
+      .catch(err => rej(err));
+    });
+
+};
 
 
 const translate = async () => {
