@@ -2,7 +2,7 @@ import { Router } from 'express';
 import _ from 'lodash';
 import wordnetSQlite from 'wordnet-sqlite';
 import { posTagging, tags } from './googleapi';
-import { findWord } from 'most-common-words-by-language';
+import fs from 'fs';
 
 const router = Router();
 
@@ -46,8 +46,19 @@ const wordNet = async (listWords) => {
  });
 };
 
+const load_common_eng_words = () => {
+  const textWordEng = fs.readFileSync(`./routes/engFreq.txt`, 'utf8');
+  const wordsEng = _.words(_.toLower(textWordEng));
+  let i = 1;
+  let freqWordsEng = wordsEng.reduce((accu, currItem) => {
+    accu[currItem] = i++;
+    return accu;
+  },{});
+  return freqWordsEng;
+};
 
-//Symposium
+
+
 //TODO: analyze text algorithm for new documents
 const analyzeTextAlgo = async (text) => {
 
@@ -57,18 +68,17 @@ const analyzeTextAlgo = async (text) => {
   //google pos tagging
   const partOfSpeech = await posTagging(text);
   let pos = partOfSpeech.tokens.reduce((accu, currItem) => {
-    const word = currItem.text.content;
+    const word = (currItem.text.content).toLowerCase();
     const wordTag = currItem.partOfSpeech.tag;
     const isNumDetPunct = wordTag != "NUM" && wordTag != "DET" && wordTag != "X" && wordTag != "PUNCT";
-    const word_Frequency = listwordFrequency[word.toLowerCase()];
-    const common_eng_words = findWord(word.toLowerCase()).english;
+    const word_Frequency = listwordFrequency[word];
     if( isNumDetPunct && word_Frequency){
       if(!accu[word]){
         accu[word] = {
           word,
           partOfSpeech : [],
           wordFrequencyText: word_Frequency.count,
-          wordFrequencyLang: common_eng_words ? common_eng_words : -1,
+          wordFrequencyLang: 0,
           definition:"",
           type:"",
           totalWeight:null
@@ -89,6 +99,7 @@ const analyzeTextAlgo = async (text) => {
 
 
   //TODO: remove known Frequent words wordFrequencyLang>8000 or wordFrequencyLang==-1
+  // listWords = await common_eng_words(listWords);
 
 
 
@@ -109,12 +120,12 @@ const analyzeTextAlgo = async (text) => {
     listWords[key].totalWeight = posValue + typeValue; // * entities
 });
 
-// return(listWords);
+return(listWords);
 
-  // order list
-  let sortedWords = _.orderBy(listWords, ['wordFrequencyLang','totalWeight', 'wordFrequencyText'], ['desc','desc', 'desc']);
-
-  return sortedWords;
+  // // order list
+  // let sortedWords = _.orderBy(listWords, ['wordFrequencyLang','totalWeight', 'wordFrequencyText'], ['desc','desc', 'desc']);
+  //
+  // return sortedWords;
 
 };
 
@@ -123,7 +134,10 @@ const analyzeTextAlgo = async (text) => {
 router.get('/', async (req, res) => {
   try{
 
-    res.send(await analyzeTextAlgo(text));
+
+    // res.send(await analyzeTextAlgo(text));
+    res.send(load_common_eng_words());
+    
   }catch(error){
     res.send(error);
   }
