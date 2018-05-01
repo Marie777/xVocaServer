@@ -17,6 +17,7 @@
     "lodash": "^4.17.5",
     "mongoose": "^4.13.10",
     "morgan": "^1.9.0",
+    "most-common-words-by-language": "^2.17.0",
     "passport": "^0.4.0",
     "path": "^0.12.7",
     "pdf-to-text": "0.0.6",

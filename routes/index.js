@@ -5,7 +5,7 @@ const router = Router();
 /* GET home page. */
 router.get('/', function(req, res, next) {
 
-  res.send("Lingo Share");
+  res.send("Lingo Share --");
 
 });
 

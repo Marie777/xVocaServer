@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import _ from 'lodash';
 import wordnetSQlite from 'wordnet-sqlite';
-import {posTagging, tags} from './googleapi';
+import { posTagging, tags } from './googleapi';
+import { findWord } from 'most-common-words-by-language';
 
 const router = Router();
 
@@ -56,21 +57,24 @@ const analyzeTextAlgo = async (text) => {
   //google pos tagging
   const partOfSpeech = await posTagging(text);
   let pos = partOfSpeech.tokens.reduce((accu, currItem) => {
-    if(currItem.partOfSpeech.tag != "NUM" && currItem.partOfSpeech.tag != " DET" &&
-    currItem.partOfSpeech.tag != "X" && currItem.partOfSpeech.tag != "PUNCT" &&
-    listwordFrequency[currItem.text.content.toLowerCase()]){
-      if(!accu[currItem.text.content]){
-        accu[currItem.text.content] = {
+    const word = currItem.text.content;
+    const wordTag = currItem.partOfSpeech.tag;
+    const isNumDetPunct = wordTag != "NUM" && wordTag != "DET" && wordTag != "X" && wordTag != "PUNCT";
+    const word_Frequency = listwordFrequency[word.toLowerCase()];
+    const common_eng_words = findWord(word.toLowerCase()).english;
+    if( isNumDetPunct && word_Frequency){
+      if(!accu[word]){
+        accu[word] = {
+          word,
           partOfSpeech : [],
-          wordFrequency: listwordFrequency[currItem.text.content.toLowerCase()].count,
+          wordFrequencyText: word_Frequency.count,
+          wordFrequencyLang: common_eng_words ? common_eng_words : -1,
           definition:"",
           type:"",
           totalWeight:null
         };
       }
-      accu[currItem.text.content].partOfSpeech.push(currItem.partOfSpeech);
-    }else{
-      // console.log(currItem.text.content," ---removed");
+      accu[word].partOfSpeech.push(currItem.partOfSpeech);
     }
     return accu;
   }, {});
@@ -80,9 +84,11 @@ const analyzeTextAlgo = async (text) => {
   let listWords = await wordNet(pos);
 
 
+  //TODO: remove duplicate words not lower case
+  //TODO: remove names
 
-  //TODO: remove known Frequent words
 
+  //TODO: remove known Frequent words wordFrequencyLang>8000 or wordFrequencyLang==-1
 
 
 
@@ -96,14 +102,17 @@ const analyzeTextAlgo = async (text) => {
   Object.keys(listWords).forEach((key) => {
     const word = listWords[key];
     const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
-    const posValue = tags[word.partOfSpeech[0]] ? tags[word.partOfSpeech[0]] : 0.1;
+    let posValue = 0;
+    word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
+    posValue /= word.partOfSpeech.length;
     const namedEntitiesValue = 0;
-    listWords[key].totalWeight = posValue * typeValue; // * entities
+    listWords[key].totalWeight = posValue + typeValue; // * entities
 });
 
+// return(listWords);
 
   // order list
-  let sortedWords = _.orderBy(listWords, ['totalWeight', 'wordFrequency'], ['desc', 'desc']);
+  let sortedWords = _.orderBy(listWords, ['wordFrequencyLang','totalWeight', 'wordFrequencyText'], ['desc','desc', 'desc']);
 
   return sortedWords;
 
@@ -113,6 +122,7 @@ const analyzeTextAlgo = async (text) => {
 
 router.get('/', async (req, res) => {
   try{
+
     res.send(await analyzeTextAlgo(text));
   }catch(error){
     res.send(error);
