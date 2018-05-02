@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import _ from 'lodash';
 import wordnetSQlite from 'wordnet-sqlite';
-import { posTagging, tags, entityAnalysis } from './googleapi';
+import { posTagging, tags, entityAnalysis, entityTypes, mentionTypes } from './googleapi';
 import fs from 'fs';
 
 const router = Router();
@@ -11,6 +11,8 @@ const wordNetType = {
   adj : 0.7,
   adv : 0.6
 };
+
+
 
 const text = "The problem problem related to it it evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, ��� kostasp with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of";
 
@@ -65,71 +67,69 @@ const load_common_eng_words = () => {
 
 
 const entityNameAnalysis = async (text) => {
-  const googleResults = await entityAnalysis(text);
-  googleResults.entities.reduce((accu, currItem) => {
-      accu[currItem.name] = currItem;
-    return accu;
-  },{});
+    let googleEntityResults = await entityAnalysis(text);
+    return googleEntityResults.entities.reduce((accu, currItem) => {
+        accu[currItem.name] = currItem;
+      return accu;
+    },{});
 };
 
 
+//TODO: wikipedia if person? definition
 //TODO: analyze text algorithm for new documents
 
 const analyzeTextAlgo = async (text) => {
 
 
-  const entityWords = await entityNameAnalysis(text)
+  const entityWords = await entityNameAnalysis(text);
+  const listwordFrequency = wordFrequency(text);
+  const freq_words_eng = load_common_eng_words();
+
+  //google pos tagging
+  const partOfSpeech = await posTagging(text);
+  let pos = partOfSpeech.tokens.reduce((accu, currItem) => {
+    const word = (currItem.text.content).toLowerCase();
+    const wordTag = currItem.partOfSpeech.tag;
+    const isNumDetPunct = wordTag != "NUM" && wordTag != "DET" && wordTag != "X" && wordTag != "PUNCT";
+    const word_Frequency = listwordFrequency[word];
+    const freqEng = freq_words_eng[word] ? freq_words_eng[word] : 10000;
+    const isEntity = entityWords[word] ? entityTypes[entityWords[word].type] : 1;
+    if( isNumDetPunct && word_Frequency && freqEng > 8000 && isEntity) {
+      if(!accu[word]){
+        accu[word] = {
+          word,
+          partOfSpeech : [],
+          Entity : entityWords[word] ? entityWords[word] : 1,
+          wordFrequencyText: word_Frequency.count,
+          wordFrequencyLang: freqEng,
+          definition:"",
+          type:"",
+          totalWeight:null
+        };
+      }
+      accu[word].partOfSpeech.push(currItem.partOfSpeech);
+      console.log(word, "------");
+    }
+    console.log(word, "--removed");
+    return accu;
+  }, {});
 
 
-  return entityWords;
-//
-//   const listwordFrequency = wordFrequency(text);
-//   const freq_words_eng = load_common_eng_words();
-//
-//   //google pos tagging
-//   const partOfSpeech = await posTagging(text);
-//   let pos = partOfSpeech.tokens.reduce((accu, currItem) => {
-//     const word = (currItem.text.content).toLowerCase();
-//     const wordTag = currItem.partOfSpeech.tag;
-//     const isNumDetPunct = wordTag != "NUM" && wordTag != "DET" && wordTag != "X" && wordTag != "PUNCT";
-//     const word_Frequency = listwordFrequency[word];
-//     const freqEng = freq_words_eng[word] ? freq_words_eng[word] : 10000;
-//     if( isNumDetPunct && word_Frequency && freqEng > 8000){
-//       if(!accu[word]){
-//         accu[word] = {
-//           word,
-//           partOfSpeech : [],
-//           wordFrequencyText: word_Frequency.count,
-//           wordFrequencyLang: freqEng,
-//           definition:"",
-//           type:"",
-//           totalWeight:null
-//         };
-//       }
-//       accu[word].partOfSpeech.push(currItem.partOfSpeech);
-//       console.log(word, "------");
-//     }
-//     console.log(word, "--removed");
-//     return accu;
-//   }, {});
-//
-//
-//   // wordnet:definition, typeValue
-//   let listWords = await wordNet(pos);
-//
-//   //Calc weight for word:
-//   Object.keys(listWords).forEach((key) => {
-//     const word = listWords[key];
-//     const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
-//     let posValue = 0;
-//     word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
-//     posValue /= word.partOfSpeech.length;
-//     const namedEntitiesValue = 0;
-//     listWords[key].totalWeight = posValue + typeValue; // * entities
-// });
-//
-// // return(listWords);
-//   //TODO: cose only wordFrequencyLang >8000
+  // wordnet:definition, typeValue
+  let listWords = await wordNet(pos);
+
+  //Calc weight for word:
+  Object.keys(listWords).forEach((key) => {
+    const word = listWords[key];
+    const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
+    let posValue = 0;
+    word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
+    posValue /= word.partOfSpeech.length;
+    const namedEntitiesValue = 0;
+    listWords[key].totalWeight = posValue + typeValue; // * entities
+});
+
+return(listWords);
 //   // order list
 //   let sortedWords = _.orderBy(listWords, ['wordFrequencyLang','totalWeight', 'wordFrequencyText'], ['desc','desc', 'desc']);
 //

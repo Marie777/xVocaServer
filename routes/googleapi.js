@@ -1,6 +1,8 @@
 import language from '@google-cloud/language';
 import Translate from '@google-cloud/translate';
 
+
+//url: https://cloud.google.com/natural-language/docs/reference/rest/v1/Token
 const tags = {
   UNKNOWN	: 0,
   ADJ	: 0.7,
@@ -16,6 +18,24 @@ const tags = {
   VERB	: 0.8,
   X	: 0,
   AFFIX: 0
+};
+
+//url: https://cloud.google.com/natural-language/docs/reference/rest/v1/Entity#Type_1
+const entityTypes = {
+  UNKNOWN : 0,
+  PERSON : 0,
+  LOCATION : 0,
+  ORGANIZATION : 0,
+  EVENT : 1,
+  WORK_OF_ART : 1,
+  CONSUMER_GOOD : 1,
+  OTHER : 1
+};
+
+const mentionTypes = {
+  TYPE_UNKNOWN : 1,
+  PROPER : 1,
+  COMMON : 1
 };
 
 const client = new language.LanguageServiceClient();
@@ -105,4 +125,4 @@ const translate = async () => {
 
 
 
-export {posTagging, tags, entityAnalysis, translate};
+export {posTagging, tags, entityAnalysis, entityTypes, mentionTypes, translate};
