@@ -5,6 +5,8 @@ import file from '../models/file';
 import {convertToTxt, deleteFromDiscovery} from './watsonapi';
 import {analyzeTextAlgo} from './analyzetxt';
 
+import {entityAnalysis } from './googleapi';
+
 const router = Router();
 
 
@@ -48,7 +50,8 @@ router.get('/convertpdf', async (req, res) => {
   // res.send({text});
 
   try{
-    res.send(await analyzeTextAlgo(text));
+    // res.send(await analyzeTextAlgo(text));
+        res.send(await entityAnalysis(text));
   }catch(error){
     res.send(error);
   }

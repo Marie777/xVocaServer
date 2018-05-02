@@ -18,10 +18,11 @@ const tags = {
   AFFIX: 0
 };
 
+const client = new language.LanguageServiceClient();
+
 
 const posTagging = async (content) => {
   // Instantiates a client
-  const client = new language.LanguageServiceClient();
   const document = {
     content,
     type: 'PLAIN_TEXT',
@@ -56,6 +57,23 @@ const posTaggingHTML = async (url) => {
 
 };
 
+const entityAnalysis = async (content) => {
+  const document = {
+    content,
+    type: 'PLAIN_TEXT',
+  };
+
+  return new Promise((res, rej) => {
+    // Detects syntax in the document
+    client
+      .analyzeEntities({document})
+      .then(results => res(results[0]))
+      .catch(err => rej(err));
+    });
+}
+
+
+
 
 const translate = async () => {
   // Your Google Cloud Platform project ID
@@ -87,4 +105,4 @@ const translate = async () => {
 
 
 
-export {posTagging, tags, translate};
+export {posTagging, tags, entityAnalysis, translate};
