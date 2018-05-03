@@ -45,16 +45,13 @@ const watsonCategory = async (text) => {
     }
 };
 
-// const discoveryEnv = {
-//   environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
-//   collection_id: '5cb98f3b-f9e7-406d-92a3-8dcd3195da2d'
-// };
 
 //Xvoca collection:
 const discoveryEnv = {
   environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
-  collection_id: '810cc2cb-1147-4bc8-80cf-b3acf06ae10a'
+  collection_id: '31b6963b-e329-4fbc-a3d0-263dab719feb'
 };
+
 
 
 //Delete document from discovery
