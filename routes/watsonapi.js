@@ -48,8 +48,8 @@ const watsonCategory = async (text) => {
 
 //Xvoca collection:
 const discoveryEnv = {
-  environment_id: '6b787e7f-34a4-425d-8615-78aee2d1ce6c',
-  collection_id: '31b6963b-e329-4fbc-a3d0-263dab719feb'
+  environment_id: 'd8fbe34e-3755-420d-8aee-82a376c9f8eb',
+  collection_id: '2972e515-f907-418e-a99e-fd6e909d7110'
 };
 
 
@@ -103,10 +103,11 @@ const discoveryAdd = async (pathFile) => {
 
 
 //Retrieve document from discovery
-const discoveryRetrieve = async () => {
+const discoveryRetrieve = async (query) => {
   const parmRetrieve = {
     environment_id: discoveryEnv.environment_id,
-    collection_id: discoveryEnv.collection_id
+    collection_id: discoveryEnv.collection_id,
+    query
   };
 
   return new Promise((res,rej) => {
@@ -125,9 +126,9 @@ const discoveryRetrieve = async () => {
 
 
 
-const convertToTxt = async (file_name) => {
+const convertToTxt = async (file_name, query) => {
   await discoveryAdd("./" + file_name);
-  return(await discoveryRetrieve());
+  return(await discoveryRetrieve(query));
 
 };
 

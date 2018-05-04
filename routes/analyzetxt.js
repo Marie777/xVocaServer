@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import _ from 'lodash';
 import wordnetSQlite from 'wordnet-sqlite';
+import Dictionary from 'oxford-dictionary-api';
 import { posTagging, tags, entityAnalysis, entityTypes, mentionTypes } from './googleapi';
 import fs from 'fs';
 
 const router = Router();
 
 
-const text = "The problem problem related to it it evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, ��� kostasp with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of";
 
 
 const wordNetType = {
@@ -79,25 +79,44 @@ const entityNameAnalysis = async (text) => {
 };
 
 
+//TODO: Oxford dictionary
+const dictOxford = async (word) => {
+  const app_id = "87feefe0";
+  const app_key = "43b5a8da96d1a41626562d9676f476cc";
+  const dict = new Dictionary(app_id,app_key);
+
+  return new Promise((res, rej) => {
+    dict.find(word, (error, data) => {
+      if(error){
+        rej(error);
+                console.log("222");
+      }else{
+            console.log(data);
+        res(data);
+      };
+    });
+  });
+};
+
+
+
 
 router.get('/', async (req, res) => {
   try{
-
-    res.send(await analyzeTextAlgo(text));
+    res.send(await dictOxford("eat"));
   }catch(error){
     res.send(error);
   }
-
-
 });
 
-//--------------------------------------------
+
+
+//------------------------------------------
 //TODO: watson category
 // text.enriched_text.categories
 //TODO: wikipedia if person? definition
 //TODO: analyze text algorithm for new documents
 //--------------------------------------------
-
 const analyzeTextAlgo = async (text) => {
 
   const entityWords = await entityNameAnalysis(text);
@@ -146,15 +165,17 @@ const analyzeTextAlgo = async (text) => {
     posValue /= word.partOfSpeech.length;
     const namedEntitiesValue = 0;
     listWords[key].totalWeight = posValue + typeValue; // * entities
-});
+  });
 
-return(listWords);
-//   // order list
-//   let sortedWords = _.orderBy(listWords, ['wordFrequencyLang','totalWeight', 'wordFrequencyText'], ['desc','desc', 'desc']);
-//
-//   return sortedWords;
+  return(listWords);
+
+  // order list
+  // let sortedWords = _.orderBy(listWords, ['totalWeight', 'wordFrequencyText'], ['desc', 'desc']);
+  //
+  // return sortedWords;
 
 };
+
 
 
 
