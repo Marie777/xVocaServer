@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import fs from "fs";
 import file from '../models/file';
-import {convertToTxt, deleteFromDiscovery} from './watsonapi';
+import {discoveryAdd, discoveryRetrieve, discoveryDelete} from './watsonapi';
 import {analyzeTextAlgo} from './analyzetxt';
 
 const router = Router();
@@ -73,7 +73,8 @@ const saveTxtDB = async (infoDoc, fileName, userData) => {
 
 //Convert pdf to text (watson discovery)
 const saveConvertpdf = async (fileName, userData) => {
-  const infoDoc = await convertToTxt(fileName, "multi");
+  await discoveryAdd("./" + fileName);
+  const infoDoc = await discoveryRetrieve(fileName);
   const text = (await saveTxtDB(infoDoc.results[0], fileName, userData)).text.text;
   return text;
 };
@@ -81,7 +82,7 @@ const saveConvertpdf = async (fileName, userData) => {
 
 
 
-//Upload pdf to server
+//(Android) Upload pdf to server
 router.post('/pdf', async (req, res) => {
   const data = req.body;
   const file = data.file;
@@ -139,14 +140,14 @@ router.get('/t', async (req, res) => {
     // let file_multi = await findFile( "5aeb242029720d358c7d2aff" );
     // let text_multi = file_multi.text.text;
 
-    // let swarm_id = "5aec3f926debca1a584e2101";
-    // let file_4p_swarm = await findFile( swarm_id );
-    // let text_4p = file_4p_swarm[0].text.text
-    // let done = await analyzeTextAlgo(text_4p);
+    let swarm_id = "5aec3f926debca1a584e2101";
+    let file_4p_swarm = await findFile( swarm_id );
+    let text_4p = file_4p_swarm[0].text.text
+    let done = await analyzeTextAlgo(text_4p);
 
 
-    let done = await analyzeTextAlgo(await saveConvertpdf(fileName, testData));
-    res.send(done);
+    // let done = await analyzeTextAlgo(await saveConvertpdf(fileName, testData));
+    // res.send(done);
 
     // let done = await findFilesUserDomain( testData.user, testData.domain );
 
@@ -165,7 +166,9 @@ router.get('/t', async (req, res) => {
 
 //TODO: Delete pdf from watson discovery - id from request
 router.get('/deletediscovery', async (req, res) => {
-  res.send(await deleteFromDiscovery("211a26f9-5ad4-4c85-b8de-6822aa6fb346"));
+  document_id = "211a26f9-5ad4-4c85-b8de-6822aa6fb346";
+  console.log(document_id);        //check: document_id
+  res.send(await discoveryDelete(document_id));
 });
 
 

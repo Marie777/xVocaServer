@@ -82,6 +82,8 @@ const discoveryDelete = async (document_id) => {
 const discoveryAdd = async (pathFile) => {
   const file = fs.readFileSync(pathFile);
 
+
+
   const parmAdd = {
     environment_id: discoveryEnv.environment_id,
     collection_id: discoveryEnv.collection_id,
@@ -126,20 +128,6 @@ const discoveryRetrieve = async (query) => {
 
 
 
-const convertToTxt = async (file_name, query) => {
-  await discoveryAdd("./" + file_name);
-  return(await discoveryRetrieve(query));
-
-};
-
-
-const deleteFromDiscovery = async (document_id) => {
-  console.log(document_id);        //check: document_id
-  return(await discoveryDelete(document_id));
-}
-
-
-
 // router.get('/category', async (req, res) => {
 //   // const pdfFilePath = "./examlePDF.pdf";
 //   // const inputTxt = await readPDF(pdfFilePath); // rowtxt.text; //
@@ -179,4 +167,4 @@ const deleteFromDiscovery = async (document_id) => {
 
 
 
-export {convertToTxt, deleteFromDiscovery};
+export {discoveryAdd, discoveryRetrieve, discoveryDelete};
