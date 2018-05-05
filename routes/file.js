@@ -57,26 +57,27 @@ const setAnalyzeResults = async (file_id, analyzeResults) => {
 
 
 // mongo save new file
-const saveTxtDB = async (infoDoc, fileName, userData) => {
+const saveTxtDB = async (textData, fileName, userData) => {
 
   // TODO: userId, domain, title, type -> from req body
   let newFile = {
     user: userData.user,
     domain: userData.domain,
     title: fileName,
-    type: "doc",
-    text: infoDoc
+    type: userData.type,
+    text: textData
   };
   return(await file.create(newFile));
 };
 
 
-//Convert pdf to text (watson discovery)
-const saveConvertpdf = async (fileName, userData) => {
-  await discoveryAdd("./" + fileName);
-  const infoDoc = await discoveryRetrieve(fileName);
-  const text = (await saveTxtDB(infoDoc.results[0], fileName, userData)).text.text;
-  return text;
+//Retreive all pdf's from discovery (watson discovery)
+const retrieveDocs = async () => {
+  const infoDoc = await discoveryRetrieve();
+  return infoDoc.results.reduce((accu, currItem) => {
+    accu[currItem.id] = currItem;
+    return accu;
+  },{});
 };
 
 
@@ -97,65 +98,84 @@ router.post('/pdf', async (req, res) => {
 });
 
 
+//------------------------------------------
+
+const fileName = "abn.pdf";
+const testData = {
+  __v: 0,
+  user: "5adda418da6ab03bd876c0f6",
+  domain: "blaaaa",
+  type: "pdf"
+};
+//------------------------------------------------
+
+const delay = (ms) => {
+    return new Promise(function (resolve, reject) {
+        setTimeout(resolve, ms);
+    });
+};
 
 
-//TODO: (Android) convert pdf to text and save to mongo, according to user, domain, file_id
-router.get('/convert', async (req, res) => {
 
+//TODO: (Android) according to user, domain, **DocumetnId***
+// 1 - convert pdf to text (watson including category)
+// 2 - save to mongo text
+// 3 - analyze text
+// 4 - save analysis to mongo
+router.get('/analyzeFile', async (req, res) => {
+
+  const docId = await discoveryAdd("./" + fileName);
+  console.log(docId);
+
+  let allDocs = await retrieveDocs();
+  while(!allDocs[docId.document_id]){
+    await delay(5000);
+    allDocs = await retrieveDocs();
+    console.log("waiting for watson..");
+  }
+  const textData = allDocs[docId.document_id];
+  console.log("Found document");
+
+
+  const newFileRec = await saveTxtDB(textData, fileName, testData);
+  console.log("save text mongo");
+  const analyzed = await analyzeTextAlgo(newFileRec.text.text);
+  console.log("analyzed");
+  const updateFileRec = await setAnalyzeResults(newFileRec._id, analyzed);
+  console.log("save analyze mongo");
+
+  const docDelete = await discoveryDelete(docId.document_id);
+  console.log(docDelete);
+
+  res.send(analyzed);
+});
+
+
+
+//TODO: recomended words from all files + sort words
+router.get('/analyzeAll', async (req, res) => {
+
+
+  // order list
+  // let sortedWords = _.orderBy(listWords, ['totalWeight', 'wordFrequencyText'], ['desc', 'desc']);
+  //
+  // return sortedWords;
 
 });
 
 
 
 
-//TODO: (Android) analyze text and save to mongo, according to user, domain, file_id
-router.get('/analyze', async (req, res) => {
+router.get('/ttt', async (req, res) => {
 
-
-});
-
-
-
-
-
-router.get('/t', async (req, res) => {
-
-  //Create records for testing
-  // const mongoRec = await saveTxtDB("infoDoc", "fileName");
-  // res.send(mongoRec);
-  const text = "The problem problem related to it it evaluation of subjective subjective answers is that each student has his/her own way of answering and it is difficult to determine the degree of correctness [1]. The assessment of the correctness of an answer involves the evaluation of grammar and knowledge woven using the conceived interpretation and creativity of a human mind. Human Evaluation, though slow and carrying drawbacks of human fatigue and bias is the only accepted method 12ba3 for evaluation of text based answers, the intelligence of one human can be fathomed by another. However, ��� kostasp with the development of communication and internet technologies, the reach and nature of education has changed with its spread across geographical, social and political boundaries with an exponential growth of intake volume. This has made the drawbacks of human evolution come out more glaring than ever before and interfere with the importance of";
-
-  const fileName = "multi6.pdf";
-  const testData = {
-    __v: 0,
-    user: "5adda418da6ab03bd876c0f6",
-    domain: "blaaaa",
-    title: "fileName",
-    type: "doc",
-    text: "infoDoc",
-    _id: "5aeb1bfa251dee2a687a25a3"
-  };
-
+//{_id: "5aedaf1648431f29200902e9"}
   try{
-    // let file_multi = await findFile( "5aeb242029720d358c7d2aff" );
-    // let text_multi = file_multi.text.text;
 
-    let swarm_id = "5aec3f926debca1a584e2101";
-    let file_4p_swarm = await findFile( swarm_id );
-    let text_4p = file_4p_swarm[0].text.text
-    let done = await analyzeTextAlgo(text_4p);
+    //4 - find all results for user, domain
+    // let done = await findFilesUserDomain( "5adda418da6ab03bd876c0f6", "blaaaa" );
+    let done = await findAllFiles();
+    res.send(done);
 
-
-    // let done = await analyzeTextAlgo(await saveConvertpdf(fileName, testData));
-    // res.send(done);
-
-    // let done = await findFilesUserDomain( testData.user, testData.domain );
-
-    // let done = await findAllFiles();
-    // res.send(done);
-
-    // let mongo = await setAnalyzeResults(swarm_id, done );
-    // res.send(mongo);
   }catch(error){
     res.send(error);
   };
@@ -166,9 +186,8 @@ router.get('/t', async (req, res) => {
 
 //TODO: Delete pdf from watson discovery - id from request
 router.get('/deletediscovery', async (req, res) => {
-  document_id = "211a26f9-5ad4-4c85-b8de-6822aa6fb346";
   console.log(document_id);        //check: document_id
-  res.send(await discoveryDelete(document_id));
+  res.send();
 });
 
 
@@ -181,3 +200,16 @@ router.get('/filedelete', async (req, res) => {
 
 
 export default router;
+
+
+// done[0].analyzeResults.reduce((accu, currItem) => {
+//
+//     accu[currItem.name] = currItem;
+//   return accu;
+// },{});
+//
+// done.forEach((f) => {
+//   if(f.analyzeResults){
+//
+//   };
+// });

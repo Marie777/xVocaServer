@@ -49,19 +49,19 @@ const watsonCategory = async (text) => {
 //Xvoca collection:
 const discoveryEnv = {
   environment_id: 'd8fbe34e-3755-420d-8aee-82a376c9f8eb',
-  collection_id: '2972e515-f907-418e-a99e-fd6e909d7110'
+  collection_id: '6fc8bceb-8930-4881-88aa-40695557396d'
 };
 
 
 
 //Delete document from discovery
 const discoveryDelete = async (document_id) => {
+  console.log("discoveryDelete");
   const parmDelete = {
     environment_id: discoveryEnv.environment_id,
     collection_id: discoveryEnv.collection_id,
     document_id
   };
-
   return new Promise((res,rej) => {
     discovery.deleteDocument(parmDelete, (error, data) => {
       if(error){
@@ -80,10 +80,8 @@ const discoveryDelete = async (document_id) => {
 
 //Add document to discovery
 const discoveryAdd = async (pathFile) => {
+  console.log("discoveryAdd");
   const file = fs.readFileSync(pathFile);
-
-
-
   const parmAdd = {
     environment_id: discoveryEnv.environment_id,
     collection_id: discoveryEnv.collection_id,
@@ -105,13 +103,14 @@ const discoveryAdd = async (pathFile) => {
 
 
 //Retrieve document from discovery
-const discoveryRetrieve = async (query) => {
+const discoveryRetrieve = async () => {
+  console.log("discoveryRetrieve");
   const parmRetrieve = {
     environment_id: discoveryEnv.environment_id,
     collection_id: discoveryEnv.collection_id,
-    query
+    // query : "_",
+    filter : {}
   };
-
   return new Promise((res,rej) => {
     discovery.query(parmRetrieve, (error, data) => {
       if(error){

@@ -8,8 +8,6 @@ import fs from 'fs';
 const router = Router();
 
 
-
-
 const wordNetType = {
   noun : 0.9,
   adj : 0.7,
@@ -89,9 +87,8 @@ const dictOxford = async (word) => {
     dict.find(word, (error, data) => {
       if(error){
         rej(error);
-                console.log("222");
       }else{
-            console.log(data);
+        console.log(data);
         res(data);
       };
     });
@@ -146,7 +143,7 @@ const analyzeTextAlgo = async (text) => {
         };
       }
       accu[word].partOfSpeech.push(currItem.partOfSpeech);
-      console.log(word, "------");
+      // console.log(word, "------");
     }
     console.log(word, "--removed");
     return accu;
@@ -169,21 +166,9 @@ const analyzeTextAlgo = async (text) => {
 
   return(listWords);
 
-  // order list
-  // let sortedWords = _.orderBy(listWords, ['totalWeight', 'wordFrequencyText'], ['desc', 'desc']);
-  //
-  // return sortedWords;
-
 };
 
 
-
-
-
-//TODO: merge analyze from all documents
-const mergeAnalysis = (analysisResults) => {
-
-};
 
 
 
