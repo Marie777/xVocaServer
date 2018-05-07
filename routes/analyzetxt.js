@@ -57,13 +57,19 @@ const wordFrequency = (text) => {
   const wordsNoInt = _.filter(words, (e) =>  { return !_.isInteger(_.parseInt(e)) && e.length > 1 }); //&& e.indexOf('kostasp') === -1
   const wordsCount = _.countBy(wordsNoInt);
 
-  let wordFrequency = _.map(wordsCount, (value,key) => {return {word:key, count:value}});
-  _.orderBy(wordFrequency, ['count'], ['desc']);
+  // let wordFrequency = _.map(wordsCount, (value,key) => {return {word:key, count:value}});
+  // _.orderBy(wordFrequency, ['count'], ['desc']);
+  //
+      // return wordFrequency;
 
-  return wordFrequency.reduce((accu, currItem) => {
-    accu[currItem.word] = currItem;
-    return accu;
-  }, {});
+
+  // return wordFrequency.reduce((accu, currItem) => {
+  //   accu[currItem.word] = currItem;
+  //   return accu;
+  // }, {});
+
+return wordsCount;
+
 };
 
 
@@ -120,7 +126,7 @@ const analyzeTextAlgo = async (text) => {
   const listwordFrequency = wordFrequency(text);
   const freq_words_eng = load_common_eng_words();
 
-  //google pos tagging
+  // google pos tagging
   const partOfSpeech = await posTagging(text);
   let pos = partOfSpeech.tokens.reduce((accu, currItem) => {
     const word = (currItem.text.content).toLowerCase();
@@ -135,7 +141,7 @@ const analyzeTextAlgo = async (text) => {
           word,
           partOfSpeech : [],
           Entity : entityWords[word] ? entityWords[word] : 1,
-          wordFrequencyText: word_Frequency.count,
+          wordFrequencyText: word_Frequency,
           wordFrequencyLang: freqEng,
           definition:"",
           type:"",
@@ -143,11 +149,12 @@ const analyzeTextAlgo = async (text) => {
         };
       }
       accu[word].partOfSpeech.push(currItem.partOfSpeech);
-      // console.log(word, "------");
+      console.log("-----",word, "------");
     }
-    console.log(word, "--removed");
+    console.log(word, "removed");
     return accu;
   }, {});
+
 
 
   // wordnet:definition, typeValue

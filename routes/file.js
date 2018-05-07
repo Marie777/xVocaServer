@@ -101,11 +101,11 @@ router.post('/pdf', async (req, res) => {
 
 //------------------------------------------
 
-const fileName = "abn.pdf";
+const fileName = "Team.pdf";
 const testData = {
   __v: 0,
   user: "5adda418da6ab03bd876c0f6",
-  domain: "blaaaa",
+  domain: "perfectTeam",
   type: "pdf"
 };
 //------------------------------------------------
@@ -140,7 +140,7 @@ router.get('/analyzeFile', async (req, res) => {
 
   const newFileRec = await saveTxtDB(textData, fileName, testData);
   console.log("save text mongo");
-  const analyzed = await analyzeTextAlgo(newFileRec.text.text);
+  const analyzed = await analyzeTextAlgo(newFileRec.text.text);   ///---???
   console.log("analyzed");
   const updateFileRec = await setAnalyzeResults(newFileRec._id, analyzed);
   console.log("save analyze mongo");
@@ -181,8 +181,6 @@ router.get('/analyzeAll', async (req, res) => {
   res.send(wordsDomain);
 
 
-
-
   // order list
   // let sortedWords = _.orderBy(listWords, ['totalWeight', 'wordFrequencyText'], ['desc', 'desc']);
   //
@@ -203,8 +201,18 @@ router.get('/ttt', async (req, res) => {
 
     //4 - find all results for user, domain
     // let done = await findFilesUserDomain( "5adda418da6ab03bd876c0f6", "blaaaa" );
-    let done = await findAllFiles();
-    res.send(done);
+
+
+    // res.send(await findAllFiles());
+
+
+    const pdf = await findFile("5af06ec9e1676e320c48ccc4"); //team
+    // const pdf = await findFile("5aee0e3e2c99410728a4ad74"); //med
+    // const pdf = await findFile("5aee0e0f3485383b8c9b5c53"); //4p.pdf
+    const text = pdf[0].text.text;
+    const analyzed = await analyzeTextAlgo(text);
+
+    res.send(analyzed);
 
   }catch(error){
     res.send(error);
@@ -214,16 +222,17 @@ router.get('/ttt', async (req, res) => {
 
 
 
-//TODO: Delete pdf from watson discovery - id from request
-router.get('/deletediscovery', async (req, res) => {
-  console.log(document_id);        //check: document_id
-  res.send();
-});
-
-
-
 //TODO: delete pdf from server
-router.get('/filedelete', async (req, res) => {
+router.get('/delete', async (req, res) => {
+
+  try {
+    // fs.unlinkSync('./' + fileName);
+    fs.unlinkSync('./' + "med2");
+    console.log('successfully deleted med2');
+    // console.log('successfully deleted', fileName);
+  } catch (err) {
+    // handle the error
+  }
 
   res.send("deleted");
 });
