@@ -3,6 +3,7 @@ import fs from "fs";
 import file from '../models/file';
 import {discoveryAdd, discoveryRetrieve, discoveryDelete} from './watsonapi';
 import {analyzeTextAlgo} from './analyzetxt';
+import _ from 'lodash';
 
 const router = Router();
 
@@ -151,9 +152,35 @@ router.get('/analyzeFile', async (req, res) => {
 });
 
 
+//-----------------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------//
 
 //TODO: recomended words from all files + sort words
 router.get('/analyzeAll', async (req, res) => {
+
+  const allResultsFiles = await findAllFiles(); // TODO replace with specific user, domain
+  // let merged_word_arr = [];
+  let wordsDomain = {};
+
+  allResultsFiles.forEach(f => {
+    if(f.analyzeResults){
+      Object
+        .keys(f.analyzeResults)
+        .map( (k) => {
+          if(!wordsDomain[k])
+            wordsDomain[k] = [];
+          wordsDomain[k].push(f.analyzeResults[k])
+        }, {});
+    }
+  });
+
+
+  console.log(Object.keys(wordsDomain).length);
+  res.send(wordsDomain);
+
+
 
 
   // order list
@@ -163,7 +190,10 @@ router.get('/analyzeAll', async (req, res) => {
 
 });
 
-
+//-----------------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------//
 
 
 router.get('/ttt', async (req, res) => {
