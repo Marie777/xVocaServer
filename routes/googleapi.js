@@ -1,6 +1,6 @@
 import language from '@google-cloud/language';
 import Translate from '@google-cloud/translate';
-
+import GoogleImages from 'google-images';
 
 //url: https://cloud.google.com/natural-language/docs/reference/rest/v1/Token
 const tags = {
@@ -94,6 +94,47 @@ const entityAnalysis = async (content) => {
 
 
 
+//TODO
+const imgFinder = async () => {
+
+const cred = {
+  CSE_ID: '001894860492850511616:3lkm_vycs2e',
+  API_KEY : 'AIzaSyAy4QWJUVcfWfru2nG33ioVUfNyzKCRXF0'
+};
+
+  const client_img = new GoogleImages(cred.CSE_ID, cred.API_KEY);
+
+  return new Promise((res, rej) => {
+    client_img.search('characterized')
+        .then(images => res(images))
+        .catch(err => rej(err));
+    });
+
+  // // paginate results
+  // client_img.search('Steve Angello', {page: 2});
+  //
+  // // search for certain size
+  // client_img.search('Steve Angello', {size: 'large'});
+
+};
+
+/*
+[{
+    "url": "http://steveangello.com/boss.jpg",
+    "type": "image/jpeg",
+    "width": 1024,
+    "height": 768,
+    "size": 102451,
+    "thumbnail": {
+        "url": "http://steveangello.com/thumbnail.jpg",
+        "width": 512,
+        "height": 512
+    }
+}]
+ */
+
+
+
 
 const translate = async () => {
   // Your Google Cloud Platform project ID
@@ -125,4 +166,4 @@ const translate = async () => {
 
 
 
-export {posTagging, tags, entityAnalysis, entityTypes, mentionTypes, translate};
+export {posTagging, tags, entityAnalysis, entityTypes, mentionTypes, translate, imgFinder};

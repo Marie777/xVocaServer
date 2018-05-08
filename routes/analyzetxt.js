@@ -55,20 +55,7 @@ const wordFrequency = (text) => {
   //const uniqWords = _.uniq(words);
   const words = _.words(_.toLower(text));
   const wordsNoInt = _.filter(words, (e) =>  { return !_.isInteger(_.parseInt(e)) && e.length > 1 }); //&& e.indexOf('kostasp') === -1
-  const wordsCount = _.countBy(wordsNoInt);
-
-  // let wordFrequency = _.map(wordsCount, (value,key) => {return {word:key, count:value}});
-  // _.orderBy(wordFrequency, ['count'], ['desc']);
-  //
-      // return wordFrequency;
-
-
-  // return wordFrequency.reduce((accu, currItem) => {
-  //   accu[currItem.word] = currItem;
-  //   return accu;
-  // }, {});
-
-return wordsCount;
+  return _.countBy(wordsNoInt);
 
 };
 
@@ -115,10 +102,10 @@ router.get('/', async (req, res) => {
 
 
 //------------------------------------------
-//TODO: watson category
-// text.enriched_text.categories
+//TODO: watson category -> text.enriched_text.categories
 //TODO: wikipedia if person? definition
-//TODO: analyze text algorithm for new documents
+//TODO: Oxford
+//Analyze text algorithm for new documents
 //--------------------------------------------
 const analyzeTextAlgo = async (text) => {
 
@@ -149,12 +136,11 @@ const analyzeTextAlgo = async (text) => {
         };
       }
       accu[word].partOfSpeech.push(currItem.partOfSpeech);
-      console.log("-----",word, "------");
+      // console.log("-----",word, "------");
     }
-    console.log(word, "removed");
+    // console.log(word, "removed");
     return accu;
   }, {});
-
 
 
   // wordnet:definition, typeValue
