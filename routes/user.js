@@ -21,6 +21,7 @@ router.get('/:id', async (req,res) =>{
 
 });
 
+
 router.get('/googleId', async (req,res) =>{
   const googleId = req.body.googleId;
 
@@ -29,6 +30,7 @@ router.get('/googleId', async (req,res) =>{
   else { return res.json(err); }
 
 });
+
 
 router.post('/newDomain', async (req, res) => {
     const googleId = req.body.googleId;
@@ -57,11 +59,12 @@ router.post('/newDomain', async (req, res) => {
 
 
 router.post('/tokenlogin/google', (req, res) => {
+  console.log(req.user);
   res.json(req.user);
 });
 
 router.post('/mockUser', async(req, res) => {
-  let user = await User.findOne({googleId: "112470571093225051385"}); 
+  let user = await User.findOne({googleId: "112470571093225051385"});
   let word1 = {
     word: "word1",
     frequency: 5,
