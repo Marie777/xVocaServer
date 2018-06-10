@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 const WordDetailsSchema = mongoose.Schema({
   word: String,
   translate: String,
-  images: [String],
+  images: [{
+    url:String
+  }],
   sentences: [{
     sentence: String,
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

@@ -304,7 +304,7 @@ router.get('/delete', async (req, res) => {
 
 
 export default router;
-
+export { analyzeAll };
 //send back user
 // res.json({
 //   data

@@ -1,19 +1,40 @@
 import { Router } from 'express';
 import WordDetails from '../models/wordDetails';
 import mongoose from 'mongoose';
+import { dictOxford } from './analyzetxt';
+import { imgFinder } from './googleapi';
 
 const router = Router();
+
 
 router.get('/:word', async (req, res) => {
   const word = req.params.word;
 
   let wordDetails = await WordDetails.findOne({word}).lean();
   if(wordDetails === null) {
-    return res.json({});
+  // return res.json({});
+    return res.json(await createNewWord(word));
   } else {
     return res.json(wordDetails);
   }
 });
+
+
+//Create new word details
+const createNewWord = async (word) => {
+  let newWord = {
+      word,
+      translate : (await dictOxford(word)).results[0].lexicalEntries[0].entries[0].senses[0].definitions[0],
+      images : (await imgFinder(word)).reduce((accu, currItem) => {
+                  accu.push({url : currItem.url});
+                  return accu;
+                },[]),
+      sentences: []
+  }
+  return await WordDetails.create(newWord);
+};
+
+
 
 router.post('/:word/sentence', async (req, res) => {
   const word = req.params.word;
@@ -34,6 +55,7 @@ router.post('/:word/sentence', async (req, res) => {
   let newWord = await WordDetails.findOne({word})
   res.json(newWord);
 });
+
 
 
 
@@ -71,4 +93,5 @@ router.post('/mockWord', async (req, res) => {
 });
 
 
+export { createNewWord };
 export default router;

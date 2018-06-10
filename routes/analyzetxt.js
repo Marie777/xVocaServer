@@ -81,7 +81,7 @@ const dictOxford = async (word) => {
       if(error){
         rej(error);
       }else{
-        console.log(data);
+        // console.log(data);
         res(data);
       };
     });
@@ -165,5 +165,5 @@ const analyzeTextAlgo = async (text) => {
 
 
 
-export {analyzeTextAlgo};
+export {analyzeTextAlgo, dictOxford};
 export default router;

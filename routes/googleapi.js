@@ -95,7 +95,7 @@ const entityAnalysis = async (content) => {
 
 
 //TODO
-const imgFinder = async () => {
+const imgFinder = async (word) => {
 
 const cred = {
   CSE_ID: '001894860492850511616:3lkm_vycs2e',
@@ -105,7 +105,7 @@ const cred = {
   const client_img = new GoogleImages(cred.CSE_ID, cred.API_KEY);
 
   return new Promise((res, rej) => {
-    client_img.search('characterized')
+    client_img.search(word)
         .then(images => res(images))
         .catch(err => rej(err));
     });
