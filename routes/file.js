@@ -176,7 +176,9 @@ const analyzeFile = async (file_name, user, domain, type) => {
 
   const newFileRec = await saveTxtDB(textData, file_name, user, domain, type);
   console.log("save text mongo");
-  const analyzed = await analyzeTextAlgo(newFileRec.text.text);
+
+  const analyzed = await analyzeTextAlgo((newFileRec.text.text).split("References", 1));
+  // const analyzed = await analyzeTextAlgo(newFileRec.text.text);
   console.log("analyzed");
   const updateFileRec = await setAnalyzeResults(newFileRec._id, analyzed);
   console.log("save analyze mongo");
@@ -209,7 +211,7 @@ const analyzeAll = async (user,domain) => {
     }
   });
 
-  console.log(Object.keys(wordsDomain).length);
+  console.log("total number of words: " + Object.keys(wordsDomain).length);
   return(wordsDomain);
 
   // order list
@@ -251,7 +253,7 @@ router.get('/ttt', async (req, res) => {
     // let done = await findFilesUserDomain( "5adda418da6ab03bd876c0f6", "blaaaa" );
 
 
-    res.send(await findAllFiles());
+    // res.send(await findAllFiles());
 
 
     // // // const pdf = await findFile("5af06ec9e1676e320c48ccc4"); //team
@@ -270,19 +272,24 @@ router.get('/ttt', async (req, res) => {
     //
     // // const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin requirements severely";
     //
-    // // const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin requirements severely";
+    const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are subtantially substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin";
     // //
-    // const analyzed = await analyzeTextAlgo(text);
-    // //
-    // res.send(analyzed);
+
+    // res.send(await analyzeFile("abn.pdf", "5a40cfbdffae2033702d3e66", "noRef", "pdf"));
+
+    const analyzed = await analyzeTextAlgo(text);
 
 
-    // res.send(await imgFinder());
+    res.send(analyzed);
 
   }catch(error){
     res.send(error);
   };
 });
+
+
+
+
 
 
 

@@ -22,13 +22,22 @@ router.get('/:word', async (req, res) => {
 
 //Create new word details
 const createNewWord = async (word) => {
+  let images = (await imgFinder(word))
+                  .reduce((accu, currItem) => {
+                      accu.push({url : currItem.url});
+                      return accu;
+                    },[]);
+
+  let oxfordDefinition = await dictOxford(word).catch((error)=>{console.log(error)});
+  let translate = "definition not found";
+  if(oxfordDefinition){
+    translate = oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0];
+  }
+
   let newWord = {
       word,
-      translate : (await dictOxford(word)).results[0].lexicalEntries[0].entries[0].senses[0].definitions[0],
-      images : (await imgFinder(word)).reduce((accu, currItem) => {
-                  accu.push({url : currItem.url});
-                  return accu;
-                },[]),
+      translate,
+      images,
       sentences: []
   }
   return await WordDetails.create(newWord);
@@ -59,38 +68,38 @@ router.post('/:word/sentence', async (req, res) => {
 
 
 
-router.post('/mockWord', async (req, res) => {
-
-  let sentence1 = {
-      sentence: "sentence1",
-      user: "5a009c07c22ed764907cae95",
-      countLike: 3,
-      location: {lat: 50, lng: 30}
-  }
-  let sentence2 = {
-      sentence: "sentence2",
-      user: "5a009c07c22ed764907cae95",
-      countLike: 3,
-      location: {lat: 30, lng: 30}
-  }
-  let sentence3 = {
-      sentence: "sentence3",
-      user: "5a009c07c22ed764907cae95",
-      countLike: 3,
-      location: {lat: 0, lng: 30}
-  }
-  let mockWord = {
-      word: "word1",
-      translate: "translation...",
-      images: ["img1", "img2"],
-      sentences: [sentence1, sentence2, sentence3]
-  }
-
-  const wordDetails = await WordDetails.create(mockWord);
-
-
-  res.json(wordDetails);
-});
+// router.post('/mockWord', async (req, res) => {
+//
+//   let sentence1 = {
+//       sentence: "sentence1",
+//       user: "5a009c07c22ed764907cae95",
+//       countLike: 3,
+//       location: {lat: 50, lng: 30}
+//   }
+//   let sentence2 = {
+//       sentence: "sentence2",
+//       user: "5a009c07c22ed764907cae95",
+//       countLike: 3,
+//       location: {lat: 30, lng: 30}
+//   }
+//   let sentence3 = {
+//       sentence: "sentence3",
+//       user: "5a009c07c22ed764907cae95",
+//       countLike: 3,
+//       location: {lat: 0, lng: 30}
+//   }
+//   let mockWord = {
+//       word: "word1",
+//       translate: "translation...",
+//       images: ["img1", "img2"],
+//       sentences: [sentence1, sentence2, sentence3]
+//   }
+//
+//   const wordDetails = await WordDetails.create(mockWord);
+//
+//
+//   res.json(wordDetails);
+// });
 
 
 export { createNewWord };

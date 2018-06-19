@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import _ from 'lodash';
 import wordnetSQlite from 'wordnet-sqlite';
+import SpellChecker from 'simple-spellchecker';
 import Dictionary from 'oxford-dictionary-api';
 import { posTagging, tags, entityAnalysis, entityTypes, mentionTypes } from './googleapi';
 import fs from 'fs';
@@ -13,6 +14,7 @@ const wordNetType = {
   adj : 0.7,
   adv : 0.6
 };
+
 
 //Find en-en definition of word list and type
 const wordNet = async (listWords) => {
@@ -90,13 +92,27 @@ const dictOxford = async (word) => {
 
 
 
+const getDictionarySpellCheck = () => {
+  return new Promise((res, rej) => {
+      SpellChecker.getDictionary("en-US", "D:/xVocaBackEnd/node_modules/simple-spellchecker/dict", (error, dictionary) => {
+      if(error){
+        console.log("error");
+        rej(error);
+      }else{
+        res(dictionary);
+      }
+    });
+  });
+};
+
 
 router.get('/', async (req, res) => {
-  try{
-    res.send(await dictOxford("eat"));
-  }catch(error){
-    res.send(error);
-  }
+
+  // try{
+  //   res.send(await dictOxford("eat"));
+  // }catch(error){
+  //   res.send(error);
+  // }
 });
 
 
@@ -115,7 +131,7 @@ const analyzeTextAlgo = async (text) => {
 
   // google pos tagging
   const partOfSpeech = await posTagging(text);
-  let pos = partOfSpeech.tokens.reduce((accu, currItem) => {
+  let pos = partOfSpeech.tokens.reduce( (accu, currItem) => {
     const word = (currItem.text.content).toLowerCase();
     const wordTag = currItem.partOfSpeech.tag;
     const isNumDetPunct = wordTag != "NUM" && wordTag != "DET" && wordTag != "X" && wordTag != "PUNCT";
@@ -130,8 +146,9 @@ const analyzeTextAlgo = async (text) => {
           Entity : entityWords[word] ? entityWords[word] : 1,
           wordFrequencyText: word_Frequency,
           wordFrequencyLang: freqEng,
-          definition:"",
-          type:"",
+          definition: "",
+          type: "",
+          misspelledSuggestions: null,
           totalWeight:null
         };
       }
@@ -146,16 +163,41 @@ const analyzeTextAlgo = async (text) => {
   // wordnet:definition, typeValue
   let listWords = await wordNet(pos);
 
+  //Check spelling - if no wordnet definition:
+  const dictionarySC = await getDictionarySpellCheck();
+  if(dictionarySC){
+    Object.keys(listWords).forEach( (word) => {
+      if(listWords[word].definition === "") {
+        var sp = dictionarySC.spellCheck(word);
+        if(!sp){
+          listWords[word].misspelledSuggestions = dictionarySC.getSuggestions(word);
+          if(suggestions[0]){
+          //  find definition for suggestions - oxford
+          }
+        }
+      }
+    });
+  }
+
+
+
+
+  //Oxford?
+
+  //wikipedia?
+
+
   //Calc weight for word:
-  Object.keys(listWords).forEach((key) => {
-    const word = listWords[key];
-    const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
-    let posValue = 0;
-    word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
-    posValue /= word.partOfSpeech.length;
-    const namedEntitiesValue = 0;
-    listWords[key].totalWeight = posValue + typeValue; // * entities
-  });
+  // Object.keys(listWords).forEach((key) => {
+  //   const word = listWords[key];
+  //
+  //   const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
+  //   let posValue = 0;
+  //   word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
+  //   posValue /= word.partOfSpeech.length;
+  //   const namedEntitiesValue = 0;
+  //   listWords[key].totalWeight = posValue + typeValue; // * entities
+  // });
 
   return(listWords);
 
