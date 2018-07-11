@@ -9,15 +9,20 @@ const router = Router();
 
 router.get('/:word', async (req, res) => {
   const word = req.params.word;
+  return res.json(await getWordDetails(word));
+});
 
+
+//Get word details
+const getWordDetails = async (word) => {
   let wordDetails = await WordDetails.findOne({word}).lean();
   if(wordDetails === null) {
   // return res.json({});
-    return res.json(await createNewWord(word));
+    return (await createNewWord(word));
   } else {
-    return res.json(wordDetails);
+    return (wordDetails);
   }
-});
+};
 
 
 //Create new word details
@@ -29,9 +34,10 @@ const createNewWord = async (word) => {
                     },[]);
 
   let oxfordDefinition = await dictOxford(word).catch((error)=>{console.log(error)});
-  let translate = "definition not found";
+  let translate = null;
   if(oxfordDefinition){
-    translate = oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0];
+    translate = oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0] ?
+                oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0] : null;
   }
 
   let newWord = {
@@ -66,7 +72,21 @@ router.post('/:word/sentence', async (req, res) => {
 });
 
 
+//Cache words
+const cacheWords = async (listWords) => {
+  bject.keys(listWords).forEach(word => {
+    if(listWords[word].definition === null){
+      getWordDetails(word);
+      delay(10000);
+    }
+  });
+};
 
+const delay = (ms) => {
+    return new Promise(function (resolve, reject) {
+        setTimeout(resolve, ms);
+    });
+};
 
 // router.post('/mockWord', async (req, res) => {
 //
@@ -102,5 +122,5 @@ router.post('/:word/sentence', async (req, res) => {
 // });
 
 
-export { createNewWord };
+export { createNewWord, cacheWords, getWordDetails };
 export default router;

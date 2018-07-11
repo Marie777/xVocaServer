@@ -163,21 +163,21 @@ const analyzeTextAlgo = async (text) => {
   // wordnet:definition, typeValue
   let listWords = await wordNet(pos);
 
-  //Check spelling - if no wordnet definition:
-  const dictionarySC = await getDictionarySpellCheck();
-  if(dictionarySC){
-    Object.keys(listWords).forEach( (word) => {
-      if(listWords[word].definition === "") {
-        var sp = dictionarySC.spellCheck(word);
-        if(!sp){
-          listWords[word].misspelledSuggestions = dictionarySC.getSuggestions(word);
-          if(suggestions[0]){
-          //  find definition for suggestions - oxford
-          }
-        }
-      }
-    });
-  }
+  // Check spelling - if no wordnet definition:
+  // const dictionarySC = await getDictionarySpellCheck();
+  // if(dictionarySC){
+  //   Object.keys(listWords).forEach( (word) => {
+  //     if(listWords[word].definition === "") {
+  //       var sp = dictionarySC.spellCheck(word);
+  //       if(!sp){
+  //         listWords[word].misspelledSuggestions = dictionarySC.getSuggestions(word);
+  //         if(suggestions[0]){
+  //         //  find definition for suggestions - oxford
+  //         }
+  //       }
+  //     }
+  //   });
+  // }
 
 
 
@@ -188,16 +188,16 @@ const analyzeTextAlgo = async (text) => {
 
 
   //Calc weight for word:
-  // Object.keys(listWords).forEach((key) => {
-  //   const word = listWords[key];
-  //
-  //   const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
-  //   let posValue = 0;
-  //   word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
-  //   posValue /= word.partOfSpeech.length;
-  //   const namedEntitiesValue = 0;
-  //   listWords[key].totalWeight = posValue + typeValue; // * entities
-  // });
+  Object.keys(listWords).forEach((key) => {
+    const word = listWords[key];
+
+    const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
+    let posValue = 0;
+    word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
+    posValue /= word.partOfSpeech.length;
+    const namedEntitiesValue = 0;
+    listWords[key].totalWeight = posValue + typeValue; // * entities
+  });
 
   return(listWords);
 

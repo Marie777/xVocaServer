@@ -12,6 +12,7 @@ import index from './routes/index';
 import user from './routes/user';
 import word from './routes/word';
 import file from './routes/file';
+import quiz from './routes/quiz';
 import corenlpapi from './routes/corenlpapi';
 import analyzetxt from './routes/analyzetxt';
 
@@ -69,6 +70,7 @@ app.use('/corenlpapi', corenlpapi);
 app.use('/user', user);
 app.use('/word', word);
 app.use('/file', file);
+app.use('/quiz', quiz);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
