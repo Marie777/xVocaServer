@@ -49,7 +49,7 @@ const watsonCategory = async (text) => {
 //Xvoca collection:
 const discoveryEnv = {
   environment_id: 'd8fbe34e-3755-420d-8aee-82a376c9f8eb',
-  collection_id: '6fc8bceb-8930-4881-88aa-40695557396d'
+  collection_id: 'a852ee6a-fede-423f-b4dc-abffdeae356a'
 };
 
 

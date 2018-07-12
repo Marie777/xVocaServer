@@ -4,6 +4,7 @@ import file from '../models/file';
 import {discoveryAdd, discoveryRetrieve, discoveryDelete} from './watsonapi';
 import {analyzeTextAlgo} from './analyzetxt';
 import { imgFinder } from './googleapi';
+import { quizGenerator } from './quiz';
 import _ from 'lodash';
 
 const router = Router();
@@ -72,7 +73,16 @@ router.post('/analyzeAlgo', async (req, res) => {                    //test: cha
 });
 
 
+router.post('/generateQuiz', async (req, res) => {
+  const user = req.body.mongoId;
+  const domain = req.body.domain;
 
+  const analyzed = await analyzeAll(user,domain);
+  // const analyzed = await analyzeAll("5adda418da6ab03bd876c0f6", "market");
+  const QnA = quizGenerator(analyzed);
+  res.send({QnA});
+
+});
 
 //mongo find files according to: user, domain
 const findFilesUserDomain = async (user, domain) => {
@@ -180,6 +190,7 @@ const analyzeFile = async (file_name, user, domain, type) => {
   const analyzed = await analyzeTextAlgo((newFileRec.text.text).split("References", 1));
   // const analyzed = await analyzeTextAlgo(newFileRec.text.text);
   console.log("analyzed");
+
   const updateFileRec = await setAnalyzeResults(newFileRec._id, analyzed);
   console.log("save analyze mongo");
 
@@ -198,7 +209,6 @@ const analyzeAll = async (user,domain) => {
   const allResultsFiles = await findFilesUserDomain(user,domain);
 
   let wordsDomain = {};
-
   allResultsFiles.forEach(f => {
     if(f.analyzeResults){
       Object
@@ -268,19 +278,24 @@ router.get('/ttt', async (req, res) => {
     // const text = "We selected 23 patients with unilateral temporal lobe epilepsy characterized by ipsilateral hippocampal sclerosis and an apparently normal contralateral hippocampus on MR imaging. Images were acquired on a 0.28 T MR scanner using a conventional Carr-Purcell Meiboom Gill sequence in all patients and in 9 healthy subjects. Texture analysis was applied to axial MR images of the first and tenth echoes. Texture analysis detects macroscopic lesions and microscopic abnormalities that can not be observed visually. The presence of texture differences in the between normal (controls) and sclerotic hippocampi was ascertained by statistical discriminant analysis. The apparently normal contralateral hippocampi can be classified into three categories in terms of texture: 4 apparently healthy, 8 similar to sclerosis, and 11 different from either healthy or sclerosis. These findings are related to a certain degree of hippocampal alteration, which further investigation"
     //
     // //google's perfect team
-    // // const text = "Within psychology, researchers sometimes colloquially refer to traits like ‘‘conversational turn-taking’’ and ‘‘average social sensitivity’’ as aspects of what’s known as psychological safety — a group culture that the Harvard Business School professor Amy Edmondson defines as a ‘‘shared belief held by members of a team that the team is safe for interpersonal risk-taking.’’ Psychological safety is ‘‘a sense of confidence that the team will not embarrass, reject or punish someone for speaking up,’’ Edmondson wrote in a study published in 1999. ‘‘It describes a team climate characterized by interpersonal trust and mutual respect in which people are comfortable being themselves.’’ "
+    const text = "Within psychology, researchers sometimes colloquially refer to traits like ‘‘conversational turn-taking’’ and ‘‘average social sensitivity’’ as aspects of what’s known as psychological safety — a group culture that the Harvard Business School professor Amy Edmondson defines as a ‘‘shared belief held by members of a team that the team is safe for interpersonal risk-taking.’’ Psychological safety is ‘‘a sense of confidence that the team will not embarrass, reject or punish someone for speaking up,’’ Edmondson wrote in a study published in 1999. ‘‘It describes a team climate characterized by interpersonal trust and mutual respect in which people are comfortable being themselves.’’ "
     //
-    // // const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin requirements severely";
+    // const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin requirements severely";
     //
-    const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are subtantially substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin";
+    // const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are subtantially substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin";
     // //
 
-    // res.send(await analyzeFile("abn.pdf", "5a40cfbdffae2033702d3e66", "noRef", "pdf"));
+    // res.send(await analyzeFile("multi6.pdf", "5adda418da6ab03bd876c0f6", "market2", "pdf"));
 
-    const analyzed = await analyzeTextAlgo(text);
+    // const analyzed = await analyzeTextAlgo(text);
+    // const quiz = quizGenerator(analyzed);
+    // res.send({analyzed,quiz});
 
+    let analyzed = await analyzeAll("5adda418da6ab03bd876c0f6", "market");
 
-    res.send(analyzed);
+    let quiz = quizGenerator(analyzed);
+    res.send(quiz);
+
 
   }catch(error){
     res.send(error);

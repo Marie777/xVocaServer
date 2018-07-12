@@ -36,8 +36,15 @@ const createNewWord = async (word) => {
   let oxfordDefinition = await dictOxford(word).catch((error)=>{console.log(error)});
   let translate = null;
   if(oxfordDefinition){
-    translate = oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0] ?
+    if(oxfordDefinition.results){
+    if(oxfordDefinition.results.lexicalEntries){
+    if(oxfordDefinition.results.lexicalEntries){
+    if(oxfordDefinition.results.lexicalEntries.entries){
+    if(oxfordDefinition.results.lexicalEntries.entries.senses){
+    if(oxfordDefinition.results.lexicalEntries.entries.senses.definitions){
+      translate = oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0] ?
                 oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0] : null;
+    }}}}}}
   }
 
   let newWord = {
