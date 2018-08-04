@@ -1,16 +1,39 @@
 import { Router } from 'express';
 import fs from "fs";
 import path from "path";
-// import file from '../models/file';
-
 import {analyzeTextAlgo, analyzeFile, analyzeAll} from '../Algorithm/analyzetxt';
 import { quizGenerator } from '../Algorithm/quiz';
+import { findAllFiles, dropFiles} from '../databaseAPI/mongo_file';
 import { delay } from '../common/utils';
 
 const router = Router();
 
 const file_name = 'test.pdf';
 const filePath = path.join(__dirname, "../pdf_upload/");
+
+
+//Find all files from DB
+router.get('/allFiles', async(req, res) =>{
+  res.send( await findAllFiles());
+});
+
+
+//Drop all files from DB
+router.get('/dropFiles', async(req, res) =>{
+  res.send( await dropFiles());
+});
+
+
+//Delete pdf from server
+router.get('/delete', async (req, res) => {
+  try {
+    fs.unlinkSync(filePath+file_name);
+  } catch (err) {
+    // handle the error
+  }
+  res.send("File deleted successfully");
+});
+
 
 //(Android) Upload pdf to server
 router.post('/pdf', async (req, res) => {
@@ -78,16 +101,6 @@ router.post('/analyzeAlgo', async (req, res) => {                    //test: cha
 
 
 
-router.post('/generateQuiz', async (req, res) => {
-  const user = req.body.mongoId;
-  const domain = req.body.domain;
-
-  const analyzed = await analyzeAll(user,domain);
-  // const analyzed = await analyzeAll("5adda418da6ab03bd876c0f6", "market");
-  const QnA = quizGenerator(analyzed);
-  res.send({QnA});
-
-});
 
 
 
@@ -111,21 +124,9 @@ router.post('/generateQuiz', async (req, res) => {
 
 router.get('/ttt', async (req, res) => {
 
-//{_id: "5aedaf1648431f29200902e9"}
+
   try{
 
-    //4 - find all results for user, domain
-    // let done = await findFilesUserDomain( "5adda418da6ab03bd876c0f6", "blaaaa" );
-
-
-    // res.send(await findAllFiles());
-
-
-    // // // const pdf = await findFile("5af06ec9e1676e320c48ccc4"); //team
-    // // // const pdf = await findFile("5aee0e3e2c99410728a4ad74"); //med
-    // // // const pdf = await findFile("5aee0e0f3485383b8c9b5c53"); //4p.pdf
-    // // // const text = pdf[0].text.text;
-    // //
     // //market
     // // const text = "Next, we turn to the postcrash period where the actual distribution looks about lognormal again. However, Jackwerth and Rubinstein (1996) document that the risk-neutral distribution is now left-skewed and leptokurtic (more peaked). Figure 2 depicts the distributions on April 15, 1992, and is typical of the postcrash period. If we conclude that the risk-neutral distributions changed in shape around the crash and that the actual distributions (which proxy for the subjective distributions) did not, then we could conclude that the third component (risk aversion functions) changed, too, around the crash. This article sets out to empirically investigate this possibility."
     //
@@ -143,7 +144,6 @@ router.get('/ttt', async (req, res) => {
     let analyzed = await analyzeAll("5adda418da6ab03bd876c0f6", "market2");
     res.send(analyzed);
 
-
   }catch(error){
     res.send(error);
   };
@@ -153,20 +153,7 @@ router.get('/ttt', async (req, res) => {
 
 
 
-//TODO: delete pdf from server
-router.get('/delete', async (req, res) => {
 
-  try {
-    // fs.unlinkSync('./' + fileName);
-    fs.unlinkSync('./' + "med2");
-    console.log('successfully deleted med2');
-    // console.log('successfully deleted', fileName);
-  } catch (err) {
-    // handle the error
-  }
-
-  res.send("deleted");
-});
 
 
 export default router;

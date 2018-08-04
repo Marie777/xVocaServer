@@ -12,7 +12,6 @@ const findFilesUserDomain = async (user, domain) => {
 };
 
 
-
 //mongo find document according to: file_id
 const findFile = async (file_id) => {
   const fileResult = await file.find({_id : file_id});
@@ -23,6 +22,7 @@ const findFile = async (file_id) => {
     }
 };
 
+
 //mongo find all files
 const findAllFiles = async () => {
   const fileResult = await file.find();
@@ -32,6 +32,18 @@ const findAllFiles = async () => {
       return err;;
     }
 };
+
+
+//mongo delete all files
+const dropFiles = async () => {
+  const deleted = await file.collection.drop();
+    if(deleted){
+      return deleted;
+    }else{
+      return err;;
+    }
+};
+
 
 //mongo find file and set analyzed results
 const setAnalyzeResults = async (file_id, analyzeResults) => {
@@ -48,11 +60,8 @@ const setAnalyzeResults = async (file_id, analyzeResults) => {
 };
 
 
-
 // mongo save new file
 const saveTxtDB = async (textData, fileName, user, domain, type) => {
-
-  // TODO: userId, domain, title, type -> from req body
   let newFile = {
     user,
     domain,
@@ -63,4 +72,11 @@ const saveTxtDB = async (textData, fileName, user, domain, type) => {
   return(await file.create(newFile));
 };
 
-export {findFilesUserDomain, findFile, findAllFiles, setAnalyzeResults, saveTxtDB};
+export {
+  findFilesUserDomain,
+  findFile,
+  findAllFiles,
+  setAnalyzeResults,
+  saveTxtDB,
+  dropFiles
+};

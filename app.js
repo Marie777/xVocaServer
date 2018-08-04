@@ -9,6 +9,7 @@ import GoogleAuth from 'google-auth-library';
 import user from './routes/user';
 import word from './routes/word';
 import file from './routes/file';
+import quiz from './routes/quiz';
 import User from './models/user';
 
 mongoose.Promise =  Promise;
@@ -59,6 +60,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/user', user);
 app.use('/word', word);
 app.use('/file', file);
+app.use('/quiz', quiz);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
