@@ -17,7 +17,6 @@ router.get('/:word', async (req, res) => {
 const getWordDetails = async (word) => {
   let wordDetails = await WordDetails.findOne({word}).lean();
   if(wordDetails === null) {
-  // return res.json({});
     return (await createNewWord(word));
   } else {
     return (wordDetails);
