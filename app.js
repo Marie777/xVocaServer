@@ -1,24 +1,18 @@
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
-var bodyParser = require('body-parser');
-
+import logger from 'morgan';
+import bodyParser from 'body-parser';
+import express from 'express';
+import path from 'path';
+import mongoose from 'mongoose';
 import { google_client_id } from './config';
 import GoogleAuth from 'google-auth-library';
-
-import User from './models/user';
 
 import index from './routes/index';
 import user from './routes/user';
 import word from './routes/word';
 import file from './routes/file';
-import corenlpapi from './routes/corenlpapi';
-import analyzetxt from './routes/analyzetxt';
-
-import mongoose from 'mongoose';
+import User from './models/user';
 
 mongoose.Promise =  Promise;
-
 mongoose.connect('mongodb://localhost/xvoca', { useMongoClient: true });
 
 var app = express();
@@ -64,8 +58,6 @@ app.use((req, res, next) => {
 //-------------------------------------------------------//
 
 app.use('/', index);
-app.use('/analyzetxt', analyzetxt);
-app.use('/corenlpapi', corenlpapi);
 app.use('/user', user);
 app.use('/word', word);
 app.use('/file', file);

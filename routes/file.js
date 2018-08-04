@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import fs from "fs";
-import file from '../models/file';
-import {discoveryAdd, discoveryRetrieve, discoveryDelete} from './watsonapi';
-import {analyzeTextAlgo} from './analyzetxt';
-import { imgFinder } from './googleapi';
-import { quizGenerator } from './quiz';
-import _ from 'lodash';
+import path from "path";
+// import file from '../models/file';
+
+import {analyzeTextAlgo, analyzeFile, analyzeAll} from '../Algorithm/analyzetxt';
+import { quizGenerator } from '../Algorithm/quiz';
+import { delay } from '../common/utils';
 
 const router = Router();
 
 const file_name = 'test.pdf';
+const filePath = path.join(__dirname, "../pdf_upload/");
 
 //(Android) Upload pdf to server
 router.post('/pdf', async (req, res) => {
@@ -17,7 +18,7 @@ router.post('/pdf', async (req, res) => {
   const user = data.mongoId;
   const domain = data.domain;
 
-  await fs.writeFile(file_name, data.file, 'base64', (error) => {
+  await fs.writeFile(filePath+file_name, data.file, 'base64', (error) => {
     if(error) {
       console.log(error);
     }else {
@@ -28,7 +29,7 @@ router.post('/pdf', async (req, res) => {
 
   let isExist = false;
   while(!isExist){
-      fs.stat(file_name, (err, stat) => {
+      fs.stat(filePath+file_name, (err, stat) => {
         if(err == null) {
             console.log('File exists');
             isExist = true;
@@ -38,7 +39,7 @@ router.post('/pdf', async (req, res) => {
             console.log('Some other error: ', err.code);
         }
     });
-    await delay(1000);
+    await delay(10000);
   }
 
   await analyzeFile(file_name, user, domain, "pdf");
@@ -73,6 +74,10 @@ router.post('/analyzeAlgo', async (req, res) => {                    //test: cha
 });
 
 
+
+
+
+
 router.post('/generateQuiz', async (req, res) => {
   const user = req.body.mongoId;
   const domain = req.body.domain;
@@ -83,156 +88,6 @@ router.post('/generateQuiz', async (req, res) => {
   res.send({QnA});
 
 });
-
-//mongo find files according to: user, domain
-const findFilesUserDomain = async (user, domain) => {
-  const fileResult = await file.find({ user, domain });
-  if(fileResult){
-    return fileResult;
-  }else{
-    return err;;
-  }
-};
-
-
-
-//mongo find document according to: file_id
-const findFile = async (file_id) => {
-  const fileResult = await file.find({_id : file_id});
-    if(fileResult){
-      return fileResult;
-    }else{
-      return err;;
-    }
-};
-
-//mongo find all files
-const findAllFiles = async () => {
-  const fileResult = await file.find();
-    if(fileResult){
-      return fileResult;
-    }else{
-      return err;;
-    }
-};
-
-//mongo find file and set analyzed results
-const setAnalyzeResults = async (file_id, analyzeResults) => {
-  const updateFile = await file.findOneAndUpdate(
-    {_id : file_id },
-    {$set : {analyzeResults} },
-    {safe:true, upsert:true}
-  );
-  if(updateFile){
-    return updateFile;
-  }else{
-    return err;
-  }
-};
-
-
-
-// mongo save new file
-const saveTxtDB = async (textData, fileName, user, domain, type) => {
-
-  // TODO: userId, domain, title, type -> from req body
-  let newFile = {
-    user,
-    domain,
-    title: fileName,
-    type,
-    text: textData
-  };
-  return(await file.create(newFile));
-};
-
-
-//Retreive all pdf's from discovery (watson discovery)
-const retrieveDocs = async () => {
-  const infoDoc = await discoveryRetrieve();
-  return infoDoc.results.reduce((accu, currItem) => {
-    accu[currItem.id] = currItem;
-    return accu;
-  },{});
-};
-
-
-//Delay func
-const delay = (ms) => {
-    return new Promise(function (resolve, reject) {
-        setTimeout(resolve, ms);
-    });
-};
-
-
-
-//Analyze algo
-// 1 - convert pdf to text (watson including category)
-// 2 - save to mongo text
-// 3 - analyze text
-// 4 - save analysis to mongo
-const analyzeFile = async (file_name, user, domain, type) => {
-  const docId = await discoveryAdd("./" + file_name);
-  console.log(docId);
-
-  let allDocs = await retrieveDocs();
-  while(!allDocs[docId.document_id]){
-    await delay(5000);
-    allDocs = await retrieveDocs();
-    console.log("waiting for watson..");
-  }
-  const textData = allDocs[docId.document_id];
-  console.log("Found document");
-
-  const newFileRec = await saveTxtDB(textData, file_name, user, domain, type);
-  console.log("save text mongo");
-
-  const analyzed = await analyzeTextAlgo((newFileRec.text.text).split("References", 1));
-  // const analyzed = await analyzeTextAlgo(newFileRec.text.text);
-  console.log("analyzed");
-
-  const updateFileRec = await setAnalyzeResults(newFileRec._id, analyzed);
-  console.log("save analyze mongo");
-
-  const docDelete = await discoveryDelete(docId.document_id);
-  console.log(docDelete);
-
-  return analyzed;
-};
-
-
-
-//Recomended words from all files
-//TODO: sort words
-const analyzeAll = async (user,domain) => {
-  // const allResultsFiles = await findAllFiles();
-  const allResultsFiles = await findFilesUserDomain(user,domain);
-
-  let wordsDomain = {};
-  allResultsFiles.forEach(f => {
-    if(f.analyzeResults){
-      Object
-        .keys(f.analyzeResults)
-        .map( (k) => {
-          if(!wordsDomain[k])
-            wordsDomain[k] = [];
-          wordsDomain[k].push(f.analyzeResults[k])
-        }, {});
-    }
-  });
-
-  console.log("total number of words: " + Object.keys(wordsDomain).length);
-  return(wordsDomain);
-
-  // order list
-  // let sortedWords = _.orderBy(listWords, ['totalWeight', 'wordFrequencyText'], ['desc', 'desc']);
-  //
-  // return sortedWords;
-};
-
-
-
-
 
 
 
@@ -283,27 +138,16 @@ router.get('/ttt', async (req, res) => {
     // const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin requirements severely";
     //
     // const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are subtantially substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin";
-    // //
 
-    // res.send(await analyzeFile("multi6.pdf", "5adda418da6ab03bd876c0f6", "market2", "pdf"));
 
-    // const analyzed = await analyzeTextAlgo(text);
-    // const quiz = quizGenerator(analyzed);
-    // res.send({analyzed,quiz});
-
-    let analyzed = await analyzeAll("5adda418da6ab03bd876c0f6", "market");
-
-    let quiz = quizGenerator(analyzed);
-    res.send(quiz);
+    let analyzed = await analyzeAll("5adda418da6ab03bd876c0f6", "market2");
+    res.send(analyzed);
 
 
   }catch(error){
     res.send(error);
   };
 });
-
-
-
 
 
 
@@ -326,22 +170,3 @@ router.get('/delete', async (req, res) => {
 
 
 export default router;
-export { analyzeAll };
-//send back user
-// res.json({
-//   data
-// });
-
-
-
-// done[0].analyzeResults.reduce((accu, currItem) => {
-//
-//     accu[currItem.name] = currItem;
-//   return accu;
-// },{});
-//
-// done.forEach((f) => {
-//   if(f.analyzeResults){
-//
-//   };
-// });

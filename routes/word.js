@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import WordDetails from '../models/wordDetails';
 import mongoose from 'mongoose';
-import { dictOxford } from './analyzetxt';
-import { imgFinder } from './googleapi';
+import { dictOxford } from '../Algorithm/analyzetxt';
+import { imgFinder } from '../Algorithm/googleapi';
 
 const router = Router();
 
