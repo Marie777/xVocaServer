@@ -3,6 +3,7 @@ import path from 'path';
 import wordnetSQlite from 'wordnet-sqlite';
 import SpellChecker from 'simple-spellchecker';
 import Dictionary from 'oxford-dictionary-api';
+import unirest  from 'unirest';
 import { posTagging, tags, entityAnalysis, entityTypes } from './googleapi';
 import {discoveryAdd, discoveryDelete, retrieveDocs} from '../Algorithm/watsonapi';
 import {findFilesUserDomain, setAnalyzeResults, saveTxtDB} from '../databaseAPI/mongo_file';
@@ -121,7 +122,8 @@ const analyzeTextAlgo = async (text) => {
           definition: "",
           type: "",
           misspelledSuggestions: null,
-          totalWeight:null
+          totalWeight:null,
+          wordsAPI:null
         };
       }
       accu[word].partOfSpeech.push(currItem.partOfSpeech);
@@ -135,31 +137,26 @@ const analyzeTextAlgo = async (text) => {
   // wordnet:definition, typeValue
   let listWords = await wordNet(pos);
 
-  // Check spelling - if no wordnet definition:
-  // const dictionarySC = await getDictionarySpellCheck();
-  // if(dictionarySC){
-  //   Object.keys(listWords).forEach( (word) => {
-  //     if(listWords[word].definition === "") {
-  //       var sp = dictionarySC.spellCheck(word);
-  //       if(!sp){
-  //         listWords[word].misspelledSuggestions = dictionarySC.getSuggestions(word);
-  //         if(suggestions[0]){
-  //         //  find definition for suggestions - oxford
-  //         }
-  //       }
-  //     }
-  //   });
-  // }
+  //WordsAPI
+  // let def = Object.keys(listWords).reduce( async(accu, w) => {
+  //   console.log("----------"+w);
+  //   resultWordsAPI = await dictWordsAPI(w);
+  //   if(resultWordsAPI){
+  //     accu[w] = resultWordsAPI;
+  //   }else{
+  //     accu[w] = null;
+  //   }
+  //   return accu;
+  // }, {});
+  //
+  // return(def);
 
-  //Oxford?
-
-  //wikipedia?
 
 
   //Calc weight for word:
-  Object.keys(listWords).forEach((key) => {
+  Object.keys(listWords).forEach(async(key) => {
     const word = listWords[key];
-
+    // console.log(word);
     const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
     let posValue = 0;
     word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
@@ -197,7 +194,7 @@ const wordNet = async (listWords) => {
 
 //Common words in English language, ordered according to frequency
 const load_common_eng_words = () => {
-  console.log(engFreqPath);
+  // console.log(engFreqPath);
   const textWordEng = fs.readFileSync(engFreqPath, 'utf8');
   const wordsEng = _.words(_.toLower(textWordEng));
   let i = 1;
@@ -238,14 +235,43 @@ const dictOxford = async (word) => {
 
   return new Promise((res, rej) => {
     dict.find(word, (error, data) => {
-      if(error){
-        rej(error);
-      }else{
-        // console.log(data);
-        res(data);
-      };
+      if(data){
+          if(data.results){
+            if(data.results[0].lexicalEntries[0]){
+                if(data.results[0].lexicalEntries[0].entries[0]){
+                        if(data.results[0].lexicalEntries[0].entries[0].senses[0]){
+                            const oxfDefinitions = data.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0];
+                                res( oxfDefinitions ? oxfDefinitions : null );
+          }}}}}else{
+            console.log("--error dictOxford---"+error);
+            rej(error);
+          }
     });
   });
+};
+
+
+//WordsAPI dictionary
+const dictWordsAPI = async (word) => {
+  const rapid_API_KEY = "wH7CeXR2Jcmsh2OAIk9vgoK3JPkAp19juUdjsnVD88Ss3XXeRl";
+
+  return new Promise((res, rej) => {
+    // console.log(word);
+    unirest.get(`https://wordsapiv1.p.mashape.com/words/${word}`)
+      .header("X-Mashape-Key", rapid_API_KEY)
+      .header("X-Mashape-Host", "wordsapiv1.p.mashape.com")
+      .end((result) =>{
+        if(!result.body.success){
+          // console.log(word + "   wordsAPI: definition not found");
+          rej(null);
+        }else{
+          // console.log(result)
+          res(result);
+        }
+        // console.log(result.status, result.headers, result.body);
+      });
+    });
+
 };
 
 
@@ -265,4 +291,4 @@ const getDictionarySpellCheck = () => {
 
 
 
-export {analyzeTextAlgo, dictOxford, analyzeFile, analyzeAll};
+export {analyzeTextAlgo, dictOxford, analyzeFile, analyzeAll, dictWordsAPI};

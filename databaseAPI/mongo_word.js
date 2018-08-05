@@ -1,7 +1,10 @@
 import WordDetails from '../models/wordDetails';
-import { dictOxford } from '../Algorithm/analyzetxt';
+import unirest  from 'unirest';
+import { dictOxford, dictWordsAPI } from '../Algorithm/analyzetxt';
 import { imgFinder } from '../Algorithm/googleapi';
 import { delay } from '../common/utils';
+
+const rapid_API_KEY = "wH7CeXR2Jcmsh2OAIk9vgoK3JPkAp19juUdjsnVD88Ss3XXeRl";
 
 //Find words
 const findWords = async () => {
@@ -25,10 +28,11 @@ const removeWord = async (word) => {
 };
 
 
-//Create new word details
+//find word if not create new word details
 const createFindWord = async (word) => {
   let wordFound = await WordDetails.findOne({word}).lean();
   if(wordFound === null) {
+    console.log("word isn't in DB");
     return (await generateNewWord(word));
   } else {
     return (wordFound);
@@ -37,35 +41,63 @@ const createFindWord = async (word) => {
 
 
 //Create new word details
+const createNewWord = async (word, translate, images) => {
+  let newWord = {
+      word,
+      translate,
+      images,
+      sentences: []
+    }
+  let mongoWord = await WordDetails.create(newWord);
+  if(mongoWord) {
+    return mongoWord;
+  } else {
+    return null;
+  }
+};
+
+
+
+//Create new word details
 const generateNewWord = async (word) => {
+  let translate = null;
   let images = (await imgFinder(word))
                   .reduce((accu, currItem) => {
                       accu.push({url : currItem.url});
                       return accu;
                     },[]);
 
+  // let wAPIDefiniton = await wordsAPI(word);
+  // return(wAPIDefiniton);
+
   let oxfordDefinition = await dictOxford(word).catch((error)=>{console.log(error)});
-  let translate = null;
-  console.log(oxfordDefinition);
   if(oxfordDefinition){
-    if(oxfordDefinition.results){
-      if(oxfordDefinition.results.lexicalEntries){
-          if(oxfordDefinition.results.lexicalEntries){
-              if(oxfordDefinition.results.lexicalEntries.entries){
-                  if(oxfordDefinition.results.lexicalEntries.entries.senses){
-                      if(oxfordDefinition.results.lexicalEntries.entries.senses.definitions){
-                          translate = oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0] ?
-                              oxfordDefinition.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0] : null;
-    }}}}}}
+    translate = oxfordDefinition;
   }
-  let newWord = {
-      word,
-      translate,
-      images,
-      sentences: []
-  }
-  return await WordDetails.create(newWord);
+  return (await createNewWord(word, translate, images));
+
 };
+
+
+const wordsAPI = async (word) => {
+  return new Promise((res, rej) => {
+    unirest
+        .get(`https://wordsapiv1.p.mashape.com/words/${word}`)
+        .header("X-Mashape-Key", rapid_API_KEY)
+        .header("X-Mashape-Host", "wordsapiv1.p.mashape.com")
+        .end((result) => {
+            if(!result.body.success){
+              console.log("wordsAPI: results weren't found " + word);
+              rej(null);
+            }else{
+              console.log("wordsAPI Found results result " + word);
+              res(result);
+            }
+          });
+        });
+ };
+
+
 
 
 //Add sentence to word

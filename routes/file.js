@@ -141,7 +141,7 @@ router.get('/ttt', async (req, res) => {
     // const text = "We investigate the risk and return of a wide variety of trading strategies involving options on the S&P 500. We consider naked and covered positions, straddles, strangles, and calendar spreads, with different maturities and levels of moneyness. Overall, we find that strategies involving short positions in options generally compensate the investor with very high Sharpe ratios, which are statistically significant even after taking into account the non-normal distribution of returns. Furthermore, we find that the strategies’ returns are subtantially substantially higher than warranted by asset pricing models. We also find that the returns of the strategies could only be justified by jump risk if the probability of market crashes were implausibly higher than it has been historically. We conclude that the returns of option strategies constitute a very good deal. However, exploiting this good deal is extremely difficult. We find that trading costs and margin";
 
 
-    let analyzed = await analyzeAll("5adda418da6ab03bd876c0f6", "market2");
+    let analyzed = await analyzeTextAlgo(text);
     res.send(analyzed);
 
   }catch(error){

@@ -11,7 +11,8 @@ const WordDetailsSchema = mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     countLike: Number,
     location: {lat: Number, lng: Number}
-  }]
+  }],
+  wordsAPI: Object
 });
 
 

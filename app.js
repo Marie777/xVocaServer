@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import { google_client_id } from './config';
 import GoogleAuth from 'google-auth-library';
 
+import index from './routes/index';
 import user from './routes/user';
 import word from './routes/word';
 import file from './routes/file';
@@ -57,6 +58,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // });
 //-------------------------------------------------------//
 
+app.use('/', index);
 app.use('/user', user);
 app.use('/word', word);
 app.use('/file', file);
