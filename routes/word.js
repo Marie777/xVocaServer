@@ -60,8 +60,7 @@ router.get('/:word', async (req, res) => {
 
 //(Android) Add new sentence
 router.post('/:word/sentence', async (req, res) => {
-  const {word} = req.params;
-  res.json(await addSentenceToWord(word));
+  res.json(await addSentenceToWord(req));
 });
 
 

@@ -11,8 +11,7 @@ import { delay } from '../common/utils';
 
 import fs from 'fs';
 
-const engFreqFile = `engFreq.txt`;
-const engFreqPath = path.join(__dirname, "./", engFreqFile);
+
 
 const file_name = 'test.pdf';
 const filePath = path.join(__dirname, "../pdf_upload/");
@@ -111,22 +110,23 @@ const analyzeTextAlgo = async (text) => {
     const word_Frequency = listwordFrequency[word];
     const freqEng = freq_words_eng[word] ? freq_words_eng[word] : 10000;
     const isEntity = entityWords[word] ? entityTypes[entityWords[word].type] : 1;
+    const salience = entityWords[word] ? entityWords[word].salience : 0;
     if( isNumDetPunct && word_Frequency && freqEng > 8000 && isEntity) {
       if(!accu[word]){
         accu[word] = {
           word,
           partOfSpeech : [],
           Entity : entityWords[word] ? entityWords[word] : 1,
+          salience,
           wordFrequencyText: word_Frequency,
+          wordFrequencyTextPrecent: null,
           wordFrequencyLang: freqEng,
           definition: "",
           type: "",
-          misspelledSuggestions: null,
-          totalWeight:null,
-          wordsAPI:null
+          totalWeight:null
         };
       }
-      accu[word].partOfSpeech.push(currItem.partOfSpeech);
+      accu[word].partOfSpeech.push(currItem.partOfSpeech.tag);
       // console.log("-----",word, "------");
     }
     // console.log(word, "removed");
@@ -159,10 +159,11 @@ const analyzeTextAlgo = async (text) => {
     // console.log(word);
     const typeValue = wordNetType[word.type] ? wordNetType[word.type] : 1;
     let posValue = 0;
-    word.partOfSpeech.forEach(t => posValue += tags[t.tag] ? tags[t.tag] : 1);
+    word.partOfSpeech.forEach(t => posValue += tags[t] ? tags[t] : 1);
     posValue /= word.partOfSpeech.length;
     const namedEntitiesValue = 0;
-    listWords[key].totalWeight = posValue + typeValue; // * entities
+    listWords[key].wordFrequencyTextPrecent = listWords[key].wordFrequencyText/Object.keys(listWords).length*100;
+    listWords[key].totalWeight = posValue * typeValue * listWords[key].wordFrequencyTextPrecent/100;
   });
 
   return(listWords);
@@ -195,6 +196,9 @@ const wordNet = async (listWords) => {
 //Common words in English language, ordered according to frequency
 const load_common_eng_words = () => {
   // console.log(engFreqPath);
+  const engFreqFile = `engFreq.txt`;
+  const engFreqPath = path.join(__dirname, "./", engFreqFile);
+
   const textWordEng = fs.readFileSync(engFreqPath, 'utf8');
   const wordsEng = _.words(_.toLower(textWordEng));
   let i = 1;
@@ -239,10 +243,12 @@ const dictOxford = async (word) => {
           if(data.results){
             if(data.results[0].lexicalEntries[0]){
                 if(data.results[0].lexicalEntries[0].entries[0]){
-                        if(data.results[0].lexicalEntries[0].entries[0].senses[0]){
-                            const oxfDefinitions = data.results[0].lexicalEntries[0].entries[0].senses[0].definitions[0];
+                        if(data.results[0].lexicalEntries[0].entries[0].senses){
+                          if(data.results[0].lexicalEntries[0].entries[0].senses.definitions){
+                            if(data.results[0].lexicalEntries[0].entries[0].senses.definitions[0]){
+                            const oxfDefinitions = data.results[0].lexicalEntries[0].entries[0].senses.definitions[0];
                                 res( oxfDefinitions ? oxfDefinitions : null );
-          }}}}}else{
+          }}}}}}}else{
             console.log("--error dictOxford---"+error);
             rej(error);
           }
@@ -291,4 +297,12 @@ const getDictionarySpellCheck = () => {
 
 
 
-export {analyzeTextAlgo, dictOxford, analyzeFile, analyzeAll, dictWordsAPI};
+export {
+  analyzeTextAlgo,
+  dictOxford,
+  analyzeFile,
+  analyzeAll,
+  dictWordsAPI,
+  load_common_eng_words,
+  entityNameAnalysis
+};

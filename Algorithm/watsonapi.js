@@ -173,4 +173,4 @@ const retrieveDocs = async () => {
 
 
 
-export {discoveryAdd, discoveryRetrieve, discoveryDelete, retrieveDocs};
+export {discoveryAdd, discoveryRetrieve, discoveryDelete, retrieveDocs, watsonCategory};
